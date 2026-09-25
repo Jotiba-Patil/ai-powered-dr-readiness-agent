@@ -227,6 +227,8 @@ The machine used for the spike has 16 GB RAM and no discrete GPU, so a 7B model 
 
 Pick one provider in `.env` (copy `.env.example`). No code changes are needed to switch.
 
+Setting up a fresh machine with a hosted API and no local model? Follow the step-by-step guide in [docs/setup-hosted-llm.md](docs/setup-hosted-llm.md).
+
 **Hosted, OpenAI-compatible API (Mistral, OpenAI, ...).** Put your key in `.env`, never in a committed file:
 
 ```
