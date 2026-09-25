@@ -3,7 +3,7 @@ name = "dr-readiness-agent"
 version = "0.1.0"
 description = "AI-powered Disaster Recovery readiness agent (open source, local LLM)"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi>=0.115",
     "httpx>=0.28.1",
@@ -83,7 +83,7 @@ exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 src = ["backend/src", "backend/tests"]
 
 [tool.ruff.lint]
@@ -93,7 +93,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "PT"
 "backend/tests/**" = ["S101", "S311"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 mypy_path = "backend/src"

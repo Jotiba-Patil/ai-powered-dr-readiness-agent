@@ -1,6 +1,7 @@
 """SQLite store: round trips, projections, chain continuity, errors."""
 
 import sqlite3
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -58,7 +59,7 @@ async def test_save_appends_events_and_updates_projections(tmp_path: Path) -> No
     assert (await store.get("exec-1")).state.value == "RUNNING"
     assert len(await store.audit("exec-1")) == len(events) + 1
 
-    with sqlite3.connect(tmp_path / "x.db") as conn:
+    with closing(sqlite3.connect(tmp_path / "x.db")) as conn, conn:
         state = conn.execute("SELECT state FROM executions").fetchone()[0]
         steps = conn.execute("SELECT COUNT(*) FROM step_runs").fetchone()[0]
         calls = conn.execute("SELECT kind, COUNT(*) FROM tool_calls GROUP BY kind").fetchall()
@@ -108,5 +109,5 @@ async def test_reopening_keeps_data_and_schema_version(tmp_path: Path) -> None:
     await store.create(*_new())
     reopened = await _store(tmp_path)
     assert (await reopened.get("exec-1")).id == "exec-1"
-    with sqlite3.connect(tmp_path / "x.db") as conn:
+    with closing(sqlite3.connect(tmp_path / "x.db")) as conn, conn:
         assert conn.execute("SELECT version FROM schema_version").fetchall() == [(LATEST_VERSION,)]

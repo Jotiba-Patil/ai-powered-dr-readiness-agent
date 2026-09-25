@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 import typer
-from conftest import MOCK, REPO, fake_llm, mock_checker
 from typer.testing import CliRunner
 
+from conftest import MOCK, REPO, fake_llm, mock_checker
 from dr_agent import __version__, cli
 
 RUNBOOK = str(MOCK / "runbooks" / "estimate-service.md")

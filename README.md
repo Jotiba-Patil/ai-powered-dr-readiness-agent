@@ -26,7 +26,7 @@ DR runbooks are written by hand, rarely validated, never cross-checked against l
 
 | Area | Choice |
 |---|---|
-| Backend | Python 3.12, FastAPI + Uvicorn, Pydantic v2, Typer, Rich, Jinja2, markdown-it-py, httpx, structlog; execution: official MCP Python SDK (`mcp`), jsonschema, SQLite (standard library) |
+| Backend | Python 3.13, FastAPI + Uvicorn, Pydantic v2, Typer, Rich, Jinja2, markdown-it-py, httpx, structlog; execution: official MCP Python SDK (`mcp`), jsonschema, SQLite (standard library) |
 | LLM | Swappable `LLMProvider` interface (see [Phase 4 findings](scratchpad/phase-4/SUMMARY.md)): Ollama with `qwen2.5:7b-instruct` locally (see [Phase 0 findings](scratchpad/phase-0/SUMMARY.md)), or any OpenAI-compatible `/chat/completions` API (OpenAI, Mistral, vLLM, ...) with an API key, over plain httpx with no vendor SDK |
 | Frontend | React 18, TypeScript, Vite, Tailwind, Recharts, openapi-typescript + openapi-fetch (typed client generated from the API schema) |
 | Quality | uv, ruff, mypy strict, pytest, vitest + React Testing Library, eslint, prettier |
@@ -215,7 +215,7 @@ mock-data/
 
 | Tool | Needed for | Notes |
 |---|---|---|
-| [uv](https://docs.astral.sh/uv/) | Python and dependencies | Provides Python 3.12 automatically |
+| [uv](https://docs.astral.sh/uv/) | Python and dependencies | Provides Python 3.13.2 automatically (or uses an installed 3.13.2) |
 | [Ollama](https://ollama.com/) | Local LLM | Optional: only for `LLM_PROVIDER=ollama` |
 | An OpenAI-compatible API key | Hosted LLM | For `LLM_PROVIDER=openai_compatible` and Docker Compose (for example Mistral or OpenAI) |
 | Node.js 20+ | Frontend | `npm ci` in `frontend/` |
@@ -253,7 +253,7 @@ Then set `LLM_PROVIDER=ollama`, `LLM_BASE_URL=http://localhost:11434` and `LLM_M
 ## Development
 
 ```
-uv sync                         # installs Python 3.12 and dependencies
+uv sync                         # installs Python 3.13.2 and dependencies
 npm ci --prefix frontend        # installs the dashboard's dependencies
 uv run poe test                 # pytest (80% coverage gate) + vitest (80% thresholds)
 uv run poe lint                 # ruff, ruff format --check, mypy --strict, eslint, tsc, prettier --check

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,7 +28,7 @@ def _tables(path: Path) -> set[str]:
 
 def _version_1_file(path: Path) -> None:
     """A database as Phases 9-11 left it: execution tables, version 1, one execution."""
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.execute("CREATE TABLE schema_version (version INTEGER NOT NULL)")
         conn.execute("INSERT INTO schema_version VALUES (1)")
         for statement in MIGRATIONS[0]:
@@ -58,7 +59,7 @@ def test_version_1_file_keeps_its_executions(tmp_path: Path) -> None:
 
 def test_newer_database_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "new.db"
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.execute("CREATE TABLE schema_version (version INTEGER NOT NULL)")
         conn.execute("INSERT INTO schema_version VALUES (99)")
     with pytest.raises(ConfigError) as info:

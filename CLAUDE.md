@@ -8,7 +8,7 @@ Source of truth:
 - Designs: `docs/design/runbook-execution.md` (Phases 8-11), `docs/design/analysis-history.md` (Phases 12-14); decisions in `docs/adr/`
 
 ## Stack (open source only)
-- Backend: Python 3.12, FastAPI, Pydantic v2, Typer + Rich, markdown-it-py, httpx, structlog, Jinja2
+- Backend: Python 3.13 (3.13.2 pinned), FastAPI, Pydantic v2, Typer + Rich, markdown-it-py, httpx, structlog, Jinja2
 - LLM: `LLMProvider` protocol. `LLM_PROVIDER=ollama` (local) or `openai_compatible` (any `/chat/completions` API, e.g. OpenAI or Mistral, with `LLM_API_KEY`), chosen by config only. Plain httpx, no vendor SDKs in core.
 - Frontend: React 18 + TypeScript + Vite + Tailwind + Recharts
 - Quality: uv, ruff, mypy --strict, pytest (+asyncio, cov), vitest + React Testing Library
@@ -28,7 +28,7 @@ docs/
 ## Commands (`make` is not available on this machine, tasks use poethepoet)
 All tasks are available (Phase 6 added the frontend to `test`, `lint` and `format`).
 ```
-uv sync                 # install backend (Python 3.12 pinned); npm ci in frontend/
+uv sync                 # install backend (Python 3.13.2 pinned); npm ci in frontend/
 uv run poe test         # pytest --cov + vitest --coverage
 uv run poe lint         # ruff check + ruff format --check + mypy --strict + eslint/tsc/prettier --check
 uv run poe format       # ruff + prettier

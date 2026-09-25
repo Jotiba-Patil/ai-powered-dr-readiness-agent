@@ -16,6 +16,10 @@ from dr_agent.utils.errors import NotFoundError, PathNotAllowedError
 
 def resolve_allowed_path(base_dir: Path, requested: str, *, suffixes: tuple[str, ...]) -> Path:
     base = base_dir.resolve()
+    # Checked explicitly: from Python 3.13, resolving a path with a NUL byte no longer
+    # raises on every platform, so the file-system error cannot be relied on.
+    if "\x00" in requested:
+        raise PathNotAllowedError(f"invalid path: {requested!r}")
     try:
         candidate = (base / requested).resolve()
     except (OSError, ValueError) as exc:

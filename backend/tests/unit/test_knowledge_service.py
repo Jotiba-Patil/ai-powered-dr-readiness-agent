@@ -91,3 +91,10 @@ def test_open_knowledge_follows_the_settings(tmp_path: Path) -> None:
     assert on.in_prompt is False
     assert open_knowledge(Settings(_env_file=None, db_path=path, knowledge_enabled=False)) is None
     assert open_knowledge(Settings(_env_file=None, db_path=path, history_enabled=False)) is None
+
+
+async def test_a_brand_new_database_is_empty_not_an_error(tmp_path: Path) -> None:
+    source = SqliteKnowledgeSource(tmp_path / "fresh.db")  # file does not exist yet
+    assert await source.analyses("Estimate Service", 5) == []
+    assert await source.live_runs("Estimate Service", 5) == []
+    assert await source.dry_run_count("Estimate Service") == 0

@@ -1453,7 +1453,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1511,7 +1511,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1567,7 +1567,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1625,7 +1625,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1684,7 +1684,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1742,7 +1742,7 @@ export interface operations {
           "text/html": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1800,7 +1800,7 @@ export interface operations {
           "text/plain": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1870,7 +1870,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Request Entity Too Large */
+      /** @description Content Too Large */
       413: {
         headers: {
           [name: string]: unknown;
@@ -1879,7 +1879,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -1975,7 +1975,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Request Entity Too Large */
+      /** @description Content Too Large */
       413: {
         headers: {
           [name: string]: unknown;
@@ -1984,7 +1984,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2239,7 +2239,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2317,7 +2317,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2393,7 +2393,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2472,7 +2472,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2553,7 +2553,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2634,7 +2634,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2716,7 +2716,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2797,7 +2797,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2893,7 +2893,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;
@@ -2949,7 +2949,7 @@ export interface operations {
           "application/json": components["schemas"]["ErrorBody"];
         };
       };
-      /** @description Unprocessable Entity */
+      /** @description Unprocessable Content */
       422: {
         headers: {
           [name: string]: unknown;

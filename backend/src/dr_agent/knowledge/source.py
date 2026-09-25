@@ -18,7 +18,7 @@ from dr_agent.execution.sqlite_store import SqliteExecutionStore
 from dr_agent.history.models import AnalysisRecord
 from dr_agent.history.sqlite_rows import RECORD_COLUMNS, record_from_row
 from dr_agent.knowledge.facts import PastRun
-from dr_agent.storage.sqlite import connect
+from dr_agent.storage.sqlite import connect, open_database
 
 _ANALYSES = (  # constant column list; every value is a bound parameter
     f"SELECT {RECORD_COLUMNS} FROM analyses WHERE service_name = ? "  # noqa: S608
@@ -52,6 +52,7 @@ class SqliteKnowledgeSource:
     def __init__(self, path: Path) -> None:
         self._path = path
         self._executions = SqliteExecutionStore(path)
+        self._ready = False  # schema created on first use, like the stores' open()
 
     async def analyses(self, service: str, limit: int) -> list[AnalysisRecord]:
         rows = await asyncio.to_thread(self._rows, _ANALYSES, (service, limit))
@@ -71,5 +72,8 @@ class SqliteKnowledgeSource:
         return int(str(rows[0][0]))
 
     def _rows(self, sql: str, params: tuple[object, ...]) -> list[tuple[object, ...]]:
+        if not self._ready:  # a brand-new database file has no tables yet
+            open_database(self._path)
+            self._ready = True
         with connect(self._path) as conn:
             return [tuple(row) for row in conn.execute(sql, params).fetchall()]

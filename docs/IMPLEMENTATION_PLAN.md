@@ -6,7 +6,7 @@ The brief (`AI-Powered Disaster.md`) asks for a tool that parses Markdown DR run
 ## Stack mapping (brief -> open-source equivalent)
 | Brief | This plan |
 |---|---|
-| Node 20 + TypeScript strict | Python 3.12, `mypy --strict`, no `Any` |
+| Node 20 + TypeScript strict | Python 3.13 (3.12 until 2026-09-25), `mypy --strict`, no `Any` |
 | commander CLI | Typer (+ Rich for colored terminal output and spinner) |
 | fastify + multipart + cors | FastAPI + python-multipart + CORSMiddleware, Uvicorn |
 | zod | Pydantic v2 |

@@ -5,7 +5,7 @@ paths:
 
 # Python backend rules
 
-- Python 3.12, `mypy --strict`, ruff for lint and format. No `Any`, no `# type: ignore` without a reason comment.
+- Python 3.13 (3.13.2 pinned in `.python-version`), `mypy --strict`, ruff for lint and format. No `Any`, no `# type: ignore` without a reason comment.
 - Pydantic v2 models for every boundary: files, API bodies, LLM output, config. Use `model_validate` and turn `ValidationError` into our own `ParseError` or `ValidationError` subclass of `AppError`.
 - Error hierarchy lives in `utils/errors.py`: `AppError` -> `ParseError`, `ValidationError`, `AnalysisError`, `ConfigError`, plus request errors (`BadRequestError`, `NotFoundError`, `ConflictError`, ...) and execution errors (`ExecutionDisabledError`, `InvalidTransitionError`, `StaleCallError`, `PolicyViolationError`, `ToolError`). Each carries a stable `code` string; map new ones in `api/errors.py`.
 - `core/`, `health/`, `execution/` and `tools/` import no FastAPI, Typer or Rich. Web and CLI layers call one shared `analyze_runbook()` service, and for executions the one `ExecutionEngine`.

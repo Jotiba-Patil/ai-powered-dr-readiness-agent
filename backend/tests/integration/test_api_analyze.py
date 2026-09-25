@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from conftest import ClientFactory, fake_llm, read_mock
 
+from conftest import ClientFactory, fake_llm, read_mock
 from dr_agent.llm.disabled import DisabledProvider
 from dr_agent.models.report import risk_level_from_score
 

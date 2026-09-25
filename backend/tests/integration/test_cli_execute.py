@@ -4,6 +4,7 @@ import json
 import re
 import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -89,7 +90,7 @@ def test_disabled_execution_is_an_error(
 
 
 def _executions(tmp_path: Path) -> list[tuple[str, str | None]]:
-    with sqlite3.connect(tmp_path / "dr-agent.db") as conn:
+    with closing(sqlite3.connect(tmp_path / "dr-agent.db")) as conn, conn:
         return conn.execute("SELECT id, analysis_id FROM executions").fetchall()
 
 

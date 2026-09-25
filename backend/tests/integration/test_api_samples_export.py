@@ -1,6 +1,7 @@
 """Dashboard support routes: sample picker and HTML report export."""
 
 import pytest
+
 from conftest import BlockingProvider, ClientFactory, fake_llm, read_mock
 
 SAMPLES = "/api/v1/dr/samples"
