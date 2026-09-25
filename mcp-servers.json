@@ -1,0 +1,7 @@
+{
+  "drsim": {
+    "transport": "stdio",
+    "command": "python",
+    "args": ["-m", "dr_agent.mock_mcp"]
+  }
+}

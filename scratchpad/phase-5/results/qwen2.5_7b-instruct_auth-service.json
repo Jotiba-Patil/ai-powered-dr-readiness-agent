@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-23T06:56:49.287586Z",
+    "runbookFile": "auth-service.md",
+    "inventoryFile": "major-outage.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 159125.60000000006
+  },
+  "serviceSummary": {
+    "name": "Auth Service",
+    "owner": "Frank Osei",
+    "statedRTO": 15.0,
+    "statedRPO": 5.0
+  },
+  "riskScore": 75,
+  "rtoAnalysis": {
+    "feasible": false,
+    "totalEstimatedMinutes": 60.0,
+    "statedRtoMinutes": 15.0,
+    "bufferMinutes": -45.0,
+    "bottleneckSteps": [
+      1,
+      2,
+      3
+    ]
+  },
+  "dependencyHealth": [],
+  "singlePointsOfFailure": [
+    {
+      "description": "The legacy-auth-cluster is a single point of failure as it is the primary system for restarting and snapshotting.",
+      "affectedSteps": [
+        1,
+        3
+      ],
+      "mitigationSuggestion": "Consider migrating to a more resilient architecture, such as a multi-cluster setup or a cloud-based solution with built-in redundancy."
+    },
+    {
+      "description": "The old-secrets-vault is a single point of failure as it is the only system for rotating session-signing keys.",
+      "affectedSteps": [
+        2
+      ],
+      "mitigationSuggestion": "Migrate to a more secure and resilient secrets management solution, such as a cloud-based vault service."
+    }
+  ],
+  "gapAnalysis": [
+    {
+      "type": "NO_VALIDATION",
+      "description": "Step(s) 1, 2, 3, 4 have no validation command to confirm they succeeded.",
+      "severity": "HIGH",
+      "recommendation": "Add a concrete validation command or check to each recovery step."
+    },
+    {
+      "type": "MISSING_ROLLBACK",
+      "description": "No step describes how to roll back or revert the recovery procedure if it fails partway through.",
+      "severity": "HIGH",
+      "recommendation": "Add explicit rollback steps for at least the highest-risk actions."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "The action 'Restart the legacy-auth-cluster' is vague and does not specify the exact steps to be taken.",
+      "severity": "MEDIUM",
+      "recommendation": "Provide detailed instructions on how to restart the legacy-auth-cluster, including any prerequisites or post-restart checks."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2
+      ],
+      "estimatedMinutes": 20.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        3
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "step(s) 1 complete"
+    },
+    {
+      "phase": 3,
+      "steps": [
+        4
+      ],
+      "estimatedMinutes": 5.0,
+      "gate": "step(s) 1, 2, 3 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Add validation commands",
+      "detail": "Add concrete validation commands or checks to each recovery step to ensure they have succeeded."
+    },
+    {
+      "priority": 2,
+      "title": "Specify rollback procedures",
+      "detail": "Add explicit rollback steps for the highest-risk actions, such as restarting the legacy-auth-cluster and rotating session-signing keys."
+    },
+    {
+      "priority": 3,
+      "title": "Clarify step actions",
+      "detail": "Provide detailed instructions for each step, especially for 'Restart the legacy-auth-cluster' and 'Rotate the session-signing keys'."
+    },
+    {
+      "priority": 4,
+      "title": "Improve RTO feasibility",
+      "detail": "Re-evaluate the RTO and RPO to ensure they are feasible given the estimated total time of 60 minutes."
+    },
+    {
+      "priority": 5,
+      "title": "Migrate to more resilient systems",
+      "detail": "Consider migrating to more resilient systems, such as a multi-cluster setup or a cloud-based solution, to reduce single points of failure."
+    }
+  ],
+  "summary": "This DR runbook for the Auth Service has several critical issues that could significantly impact recovery time and reliability. The runbook lacks validation commands for key steps, does not specify rollback procedures, and has implicit dependencies that are not explicitly stated. The recovery time objective (RTO) of 15 minutes is unfeasible given the estimated total time of 60 minutes, and the runbook does not address single points of failure, which could block recovery if they fail.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

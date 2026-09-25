@@ -1,0 +1,177 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-23T07:02:21.098252Z",
+    "runbookFile": "payment-gateway.md",
+    "inventoryFile": "partial-outage.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 187437.4213000001
+  },
+  "serviceSummary": {
+    "name": "Payment Gateway",
+    "owner": "team",
+    "statedRTO": 30.0,
+    "statedRPO": 5.0
+  },
+  "riskScore": 75,
+  "rtoAnalysis": {
+    "feasible": false,
+    "totalEstimatedMinutes": 45.0,
+    "statedRtoMinutes": 30.0,
+    "bufferMinutes": -15.0,
+    "bottleneckSteps": [
+      1,
+      2
+    ]
+  },
+  "dependencyHealth": [
+    {
+      "name": "payment-ledger-db",
+      "runbookAssumes": "available",
+      "actualStatus": "DOWN",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "fraud-check-external",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "card-network-gateway",
+      "runbookAssumes": "available",
+      "actualStatus": "NOT_IN_INVENTORY",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "legacy-token-vault",
+      "runbookAssumes": "available",
+      "actualStatus": "DOWN",
+      "impact": "not directly referenced by any recovery step"
+    }
+  ],
+  "singlePointsOfFailure": [
+    {
+      "description": "Step 3, which checks the queue backlog, is a single point of failure as it could fail without an alternative step to clear the queue if needed.",
+      "affectedSteps": [
+        3
+      ],
+      "mitigationSuggestion": "Add a backup step to clear the queue if step 3 fails."
+    },
+    {
+      "description": "Step 4, which re-enables card processing, is a single point of failure as it could fail without an alternative step to disable card processing if needed.",
+      "affectedSteps": [
+        4
+      ],
+      "mitigationSuggestion": "Add a backup step to disable card processing if step 4 fails."
+    }
+  ],
+  "gapAnalysis": [
+    {
+      "type": "OWNER_AMBIGUITY",
+      "description": "Step(s) 1, 2 have a vague or placeholder owner instead of a named person or team.",
+      "severity": "MEDIUM",
+      "recommendation": "Assign a specific, on-call-reachable owner to each step."
+    },
+    {
+      "type": "NO_VALIDATION",
+      "description": "Step(s) 1, 2, 3, 4, 5 have no validation command to confirm they succeeded.",
+      "severity": "HIGH",
+      "recommendation": "Add a concrete validation command or check to each recovery step."
+    },
+    {
+      "type": "MISSING_ROLLBACK",
+      "description": "No step describes how to roll back or revert the recovery procedure if it fails partway through.",
+      "severity": "HIGH",
+      "recommendation": "Add explicit rollback steps for at least the highest-risk actions."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'payment-ledger-db' is DOWN (not directly referenced by any recovery step).",
+      "severity": "HIGH",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'card-network-gateway' is NOT_IN_INVENTORY (not directly referenced by any recovery step).",
+      "severity": "MEDIUM",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'legacy-token-vault' is DOWN (not directly referenced by any recovery step).",
+      "severity": "HIGH",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 1: 'Fix the database issue' is vague and does not specify what the issue is or how to fix it.",
+      "severity": "HIGH",
+      "recommendation": "Specify the exact issue and the steps to fix it."
+    },
+    {
+      "type": "MISSING_STEP",
+      "description": "There is no step to address the 'card-network-gateway' dependency, which is not in the inventory.",
+      "severity": "MEDIUM",
+      "recommendation": "Add a step to address the 'card-network-gateway' dependency if it becomes available."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2,
+        5
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        3
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 2 complete"
+    },
+    {
+      "phase": 3,
+      "steps": [
+        4
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 3 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Add validation commands",
+      "detail": "Add concrete validation commands to each recovery step to ensure they have succeeded."
+    },
+    {
+      "priority": 2,
+      "title": "Define specific issues",
+      "detail": "Specify the exact issues to be fixed in step 1 and provide clear steps to resolve them."
+    },
+    {
+      "priority": 3,
+      "title": "Add rollback procedures",
+      "detail": "Add explicit rollback steps for the highest-risk actions, such as steps 2 and 4."
+    },
+    {
+      "priority": 4,
+      "title": "Clarify step dependencies",
+      "detail": "Clarify the dependencies between steps, especially between steps 2 and 3, and steps 3 and 4."
+    },
+    {
+      "priority": 5,
+      "title": "Update dependency status",
+      "detail": "Update the dependency status for 'card-network-gateway' and 'legacy-token-vault' to reflect their actual status."
+    }
+  ],
+  "summary": "This DR runbook for the Payment Gateway service has several critical gaps and risks. The recovery steps are not well-defined, with no validation commands or rollback procedures. The runbook assumes the availability of dependencies that are actually down, which could severely impact the recovery process. The steps are also ambiguous, with vague owners and no clear dependencies between steps. The recovery time objective (RTO) of 30 minutes is not feasible given the current steps and estimated time of 45 minutes. The runbook lacks critical details that could significantly impact the recovery process, such as validation commands and rollback procedures.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

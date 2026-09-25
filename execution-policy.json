@@ -1,0 +1,23 @@
+{
+  "servers": {
+    "drsim": {
+      "tools": {
+        "k8s_rollout_status": { "risk": "read" },
+        "k8s_rollout_restart": { "risk": "write" },
+        "k8s_rollout_undo": { "risk": "write" },
+        "db_is_in_recovery": { "risk": "read" },
+        "db_promote_replica": { "risk": "destructive" },
+        "cache_ping": { "risk": "read" },
+        "cache_warm_from_snapshot": {
+          "risk": "write",
+          "constraints": { "snapshot": { "type": "string", "pattern": "^[a-z0-9-]{1,64}$" } }
+        },
+        "dns_switch_region": {
+          "risk": "destructive",
+          "constraints": { "region": { "enum": ["primary", "standby"] } }
+        },
+        "smoke_run": { "risk": "read" }
+      }
+    }
+  }
+}

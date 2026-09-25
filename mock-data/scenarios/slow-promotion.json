@@ -1,0 +1,6 @@
+{
+  "faults": {
+    "db_promote_replica": { "latencyMs": 5000 },
+    "k8s_rollout_restart": { "failOnCalls": [1], "message": "ImagePullBackOff in standby" }
+  }
+}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DR readiness report: Svc</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; color: #1a1a1a; }
+  h1, h2 { border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+  th { background: #f5f5f5; }
+  .risk-LOW { color: #1a7f37; font-weight: bold; }
+  .risk-MEDIUM { color: #9a6700; font-weight: bold; }
+  .risk-HIGH { color: #bc4c00; font-weight: bold; }
+  .risk-CRITICAL { color: #cf222e; font-weight: bold; }
+  .status-UP { color: #1a7f37; }
+  .status-DOWN, .status-UNREACHABLE { color: #cf222e; }
+  .status-NOT_IN_INVENTORY { color: #9a6700; }
+  .sev-HIGH { color: #cf222e; }
+  .sev-MEDIUM { color: #9a6700; }
+  .sev-LOW { color: #57606a; }
+  .note { background: #fff8c5; border: 1px solid #d4a72c; padding: 0.75rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>Svc &mdash; DR readiness report</h1>
+  <p>Owner: Unspecified &middot; Analyzed: 2026-09-23 11:02:08.539482+00:00</p>
+  <p>AI analysis was unavailable for this run. The figures below are rule-based only: RTO math, dependency health and the four automatically-checkable gap types. Single points of failure, additional gaps and suggestions require a working LLM provider and are not included.</p>
+  
+  <p class="note">AI analysis unavailable: LLM provider is disabled (LLM_PROVIDER=none)</p>
+  
+
+  <h2>Risk score</h2>
+  <p class="risk-MEDIUM">30/100 (MEDIUM)</p>
+
+  <h2>RTO feasibility</h2>
+  <p>
+    Feasible &mdash;
+    5.0 min estimated vs
+    60.0 min stated
+    (buffer 55.0 min)
+  </p>
+  
+
+  
+
+  
+  <h2>Gaps</h2>
+  <table>
+    <tr><th>Type</th><th>Severity</th><th>Description</th><th>Recommendation</th></tr>
+    
+    <tr><td>NO_VALIDATION</td><td class="sev-HIGH">HIGH</td><td>Step(s) 1 have no validation command to confirm they succeeded.</td><td>Add a concrete validation command or check to each recovery step.</td></tr>
+    
+    <tr><td>MISSING_ROLLBACK</td><td class="sev-HIGH">HIGH</td><td>No step describes how to roll back or revert the recovery procedure if it fails partway through.</td><td>Add explicit rollback steps for at least the highest-risk actions.</td></tr>
+    
+  </table>
+  
+
+  
+
+  
+  <h2>Execution plan</h2>
+  <table>
+    <tr><th>Phase</th><th>Steps</th><th>Minutes</th><th>Gate</th></tr>
+    
+    <tr><td>1</td><td>1</td><td>5.0</td><td>none: initial phase, no prerequisites</td></tr>
+    
+  </table>
+  
+
+  
+</body>
+</html>

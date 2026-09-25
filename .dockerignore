@@ -1,0 +1,29 @@
+# Only what the images need: pyproject.toml, uv.lock, README.md, backend/src, mock-data,
+# frontend (sources + lockfile) and docker/.
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.claude
+.mcp.json
+.playwright-mcp
+.venv
+**/__pycache__
+**/*.pyc
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+dist
+backend/tests
+scratchpad
+docs
+AI-Powered Disaster.md
+frontend/node_modules
+frontend/dist
+frontend/coverage
+frontend/*.tsbuildinfo
+**/*.db
+**/*.db-*

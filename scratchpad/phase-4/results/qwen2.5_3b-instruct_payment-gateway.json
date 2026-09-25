@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-22T16:49:06.112163Z",
+    "runbookFile": "mock-data/runbooks/payment-gateway.md",
+    "inventoryFile": "mock-data/inventories/partial-outage.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 90590.75819997815
+  },
+  "serviceSummary": {
+    "name": "Payment Gateway",
+    "owner": "team",
+    "statedRTO": 30.0,
+    "statedRPO": 5.0
+  },
+  "riskScore": 75,
+  "rtoAnalysis": {
+    "feasible": false,
+    "totalEstimatedMinutes": 45.0,
+    "statedRtoMinutes": 30.0,
+    "bufferMinutes": -15.0,
+    "bottleneckSteps": [
+      1,
+      2
+    ]
+  },
+  "dependencyHealth": [
+    {
+      "name": "payment-ledger-db",
+      "runbookAssumes": "available",
+      "actualStatus": "DOWN",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "fraud-check-external",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "card-network-gateway",
+      "runbookAssumes": "available",
+      "actualStatus": "NOT_IN_INVENTORY",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "legacy-token-vault",
+      "runbookAssumes": "available",
+      "actualStatus": "DOWN",
+      "impact": "not directly referenced by any recovery step"
+    }
+  ],
+  "singlePointsOfFailure": [
+    {
+      "description": "The runbook assumes the database is available, which is not the case, and does not specify how to handle dependencies that are not available.",
+      "affectedSteps": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "mitigationSuggestion": "Update the runbook to reflect the actual status of dependencies and include steps to handle unavailable dependencies."
+    }
+  ],
+  "gapAnalysis": [
+    {
+      "type": "OWNER_AMBIGUITY",
+      "description": "Step(s) 1, 2 have a vague or placeholder owner instead of a named person or team.",
+      "severity": "MEDIUM",
+      "recommendation": "Assign a specific, on-call-reachable owner to each step."
+    },
+    {
+      "type": "NO_VALIDATION",
+      "description": "Step(s) 1, 2, 3, 4, 5 have no validation command to confirm they succeeded.",
+      "severity": "HIGH",
+      "recommendation": "Add a concrete validation command or check to each recovery step."
+    },
+    {
+      "type": "MISSING_ROLLBACK",
+      "description": "No step describes how to roll back or revert the recovery procedure if it fails partway through.",
+      "severity": "HIGH",
+      "recommendation": "Add explicit rollback steps for at least the highest-risk actions."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'payment-ledger-db' is DOWN (not directly referenced by any recovery step).",
+      "severity": "HIGH",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'card-network-gateway' is NOT_IN_INVENTORY (not directly referenced by any recovery step).",
+      "severity": "MEDIUM",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "UNVERIFIED_DEPENDENCY",
+      "description": "Dependency 'legacy-token-vault' is DOWN (not directly referenced by any recovery step).",
+      "severity": "HIGH",
+      "recommendation": "Confirm the dependency's real status before relying on this runbook, or update it."
+    },
+    {
+      "type": "MISSING_STEP",
+      "description": "No step describes how to roll back or revert the recovery procedure if it fails partway through.",
+      "severity": "HIGH",
+      "recommendation": "Add explicit rollback steps for at least the highest-risk actions."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 1: 'Fix the database issue' does not specify what actions to take to fix the database.",
+      "severity": "MEDIUM",
+      "recommendation": "Clarify the actions to be taken in step 1 to ensure the database is fixed."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 3: 'Check the queue backlog and clear it if needed' does not specify what constitutes a backlog or how to clear it.",
+      "severity": "MEDIUM",
+      "recommendation": "Specify what constitutes a backlog and how to clear it in step 3."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 4: 'Re-enable card processing' does not specify what actions are needed to re-enable card processing.",
+      "severity": "MEDIUM",
+      "recommendation": "Specify the actions needed to re-enable card processing in step 4."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 5: 'Tell support the incident is resolved' does not specify what constitutes an incident resolution.",
+      "severity": "MEDIUM",
+      "recommendation": "Specify what constitutes an incident resolution in step 5."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        3,
+        4,
+        5
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        2
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 1 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Update Dependency Status",
+      "detail": "Update the runbook to reflect the actual status of dependencies and include steps to handle unavailable dependencies."
+    },
+    {
+      "priority": 2,
+      "title": "Add Rollback Steps",
+      "detail": "Add explicit rollback steps for at least the highest-risk actions."
+    },
+    {
+      "priority": 3,
+      "title": "Clarify Step 1",
+      "detail": "Clarify the actions to be taken in step 1 to ensure the database is fixed."
+    },
+    {
+      "priority": 4,
+      "title": "Specify Step 3",
+      "detail": "Specify what constitutes a backlog and how to clear it in step 3."
+    },
+    {
+      "priority": 5,
+      "title": "Specify Step 4",
+      "detail": "Specify the actions needed to re-enable card processing in step 4."
+    }
+  ],
+  "summary": "The Payment Gateway DR runbook outlines steps to recover from a failure, but lacks critical validation and rollback steps. The runbook assumes the database is available, which is not the case, and does not specify how to handle dependencies that are not available. This runbook needs significant improvement to ensure it can be relied upon during a real disaster.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

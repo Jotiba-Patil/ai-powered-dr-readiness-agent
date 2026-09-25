@@ -1,0 +1,131 @@
+{
+  "serviceName": "Estimate Service",
+  "analysesConsidered": 6,
+  "liveRuns": 4,
+  "dryRuns": 2,
+  "riskScores": [
+    20,
+    18,
+    25,
+    30,
+    22,
+    15
+  ],
+  "executions": [
+    {
+      "executionId": "run-4",
+      "state": "COMPLETED",
+      "startedAt": "2026-09-20T10:00:00Z",
+      "elapsedMinutes": 80.0,
+      "statedRtoMinutes": 60.0
+    },
+    {
+      "executionId": "run-3",
+      "state": "COMPLETED",
+      "startedAt": "2026-09-13T10:00:00Z",
+      "elapsedMinutes": 70.5,
+      "statedRtoMinutes": 60.0
+    },
+    {
+      "executionId": "run-2",
+      "state": "FAILED",
+      "startedAt": "2026-09-06T10:00:00Z",
+      "elapsedMinutes": 35.0,
+      "statedRtoMinutes": 60.0
+    },
+    {
+      "executionId": "run-1",
+      "state": "COMPLETED",
+      "startedAt": "2026-08-30T10:00:00Z",
+      "elapsedMinutes": 75.0,
+      "statedRtoMinutes": 60.0
+    }
+  ],
+  "steps": [
+    {
+      "stepNumber": 1,
+      "fingerprint": "f92352aef26464b8b47e29a793d8f2a88e7b17e6fcd50da4ab9f1aa7c3c7d326",
+      "targetSystem": null,
+      "estimatedMinutes": 5.0,
+      "liveRuns": 4,
+      "succeeded": 4,
+      "medianActiveMinutes": 4.0,
+      "maxActiveMinutes": 6.0,
+      "medianElapsedMinutes": 5.0
+    },
+    {
+      "stepNumber": 2,
+      "fingerprint": "b4044bdb541b9ad5749bfaa7c775ad44b4be16da991393ac21ce666f79557125",
+      "targetSystem": "standby-region-compute",
+      "estimatedMinutes": 15.0,
+      "liveRuns": 4,
+      "succeeded": 4,
+      "medianActiveMinutes": 28.5,
+      "maxActiveMinutes": 35.0,
+      "medianElapsedMinutes": 31.0
+    },
+    {
+      "stepNumber": 3,
+      "fingerprint": "b63e8674ba375060a22bcca8ac80c395aa365da4d2337b3b3d056e1e2a0c44a1",
+      "targetSystem": null,
+      "estimatedMinutes": 10.0,
+      "liveRuns": 4,
+      "succeeded": 2,
+      "failed": 1,
+      "rolledBack": 1,
+      "retries": 2,
+      "medianActiveMinutes": 12.0,
+      "maxActiveMinutes": 18.0,
+      "medianElapsedMinutes": 14.0
+    },
+    {
+      "stepNumber": 4,
+      "fingerprint": "21422a5ff0b4294835c7e2a0f9c5ca42fb5e286033f68df425f748536c9efe00",
+      "targetSystem": null,
+      "estimatedMinutes": 15.0,
+      "liveRuns": 4,
+      "succeeded": 3,
+      "skipped": 1,
+      "medianActiveMinutes": 14.0,
+      "maxActiveMinutes": 16.0,
+      "medianElapsedMinutes": 15.0
+    },
+    {
+      "stepNumber": 5,
+      "fingerprint": "19c0af3be74a8aea8e57bf4b31ac1b844d341688f5c4c449df07e4c0484a372e",
+      "targetSystem": null,
+      "estimatedMinutes": 10.0,
+      "liveRuns": 4,
+      "succeeded": 3,
+      "unknown": 1,
+      "medianActiveMinutes": 9.0,
+      "maxActiveMinutes": 11.0,
+      "medianElapsedMinutes": 10.0
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "estimate-postgres",
+      "analyses": 6,
+      "up": 6
+    },
+    {
+      "name": "internal-dns",
+      "analyses": 6,
+      "up": 6
+    },
+    {
+      "name": "pricing-cache",
+      "analyses": 6,
+      "up": 5,
+      "notInInventory": 1
+    },
+    {
+      "name": "rates-kafka-topic",
+      "analyses": 6,
+      "up": 2,
+      "down": 3,
+      "unreachable": 1
+    }
+  ]
+}

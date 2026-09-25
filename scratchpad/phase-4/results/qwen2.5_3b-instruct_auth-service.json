@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-22T16:49:44.337813Z",
+    "runbookFile": "mock-data/runbooks/auth-service.md",
+    "inventoryFile": "mock-data/inventories/major-outage.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 38175.65769999055
+  },
+  "serviceSummary": {
+    "name": "Auth Service",
+    "owner": "Frank Osei",
+    "statedRTO": 15.0,
+    "statedRPO": 5.0
+  },
+  "riskScore": 60,
+  "rtoAnalysis": {
+    "feasible": false,
+    "totalEstimatedMinutes": 60.0,
+    "statedRtoMinutes": 15.0,
+    "bufferMinutes": -45.0,
+    "bottleneckSteps": [
+      1,
+      2,
+      3
+    ]
+  },
+  "dependencyHealth": [],
+  "singlePointsOfFailure": [],
+  "gapAnalysis": [
+    {
+      "type": "NO_VALIDATION",
+      "description": "Step(s) 1, 2, 3, 4 have no validation command to confirm they succeeded.",
+      "severity": "HIGH",
+      "recommendation": "Add a concrete validation command or check to each recovery step."
+    },
+    {
+      "type": "MISSING_ROLLBACK",
+      "description": "No step describes how to roll back or revert the recovery procedure if it fails partway through.",
+      "severity": "HIGH",
+      "recommendation": "Add explicit rollback steps for at least the highest-risk actions."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "estimatedMinutes": 20.0,
+      "gate": "none: initial phase, no prerequisites"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Add Validation Commands",
+      "detail": "Implement validation commands for each step to ensure they are executed successfully and to provide a way to verify the recovery process."
+    },
+    {
+      "priority": 2,
+      "title": "Include Rollback Steps",
+      "detail": "Add steps to rollback the recovery process if any steps fail, ensuring the system can be restored to a known good state."
+    },
+    {
+      "priority": 3,
+      "title": "Clarify Dependencies",
+      "detail": "Identify and document dependencies between steps to ensure the recovery process is efficient and avoids redundant steps."
+    },
+    {
+      "priority": 4,
+      "title": "Review and Update RTO",
+      "detail": "Re-evaluate the Recovery Time Objective (RTO) to ensure it aligns with the current service needs and operational constraints."
+    },
+    {
+      "priority": 5,
+      "title": "Clarify Ownership",
+      "detail": "Ensure that each step is clearly assigned to a specific person or team, reducing ambiguity and improving accountability."
+    }
+  ],
+  "summary": "The Auth Service DR runbook outlines steps to recover from a failure, but lacks validation commands and explicit rollback steps. The runbook also does not account for dependencies between steps, which could lead to inefficiencies or errors. The runbook is missing steps for rollback and validation, which are critical for ensuring the recovery process is robust and reliable.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

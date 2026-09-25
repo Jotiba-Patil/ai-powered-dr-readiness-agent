@@ -1,0 +1,5 @@
+{
+  "faults": {
+    "smoke_run": { "failOnCalls": [1], "message": "smoke tests failed: checkout returns HTTP 500" }
+  }
+}

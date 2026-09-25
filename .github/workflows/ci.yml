@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --frozen
+      - run: npm ci
+        working-directory: frontend
+      # lint = ruff + mypy --strict + eslint/tsc/prettier; test = pytest (--cov-fail-under=80) + vitest (80% thresholds)
+      - run: uv run poe lint
+      - run: uv run poe test
+      - run: uv run poe build-ui
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: uv sync --frozen
+      # pip-audit on the exact locked versions + npm audit (fails on high/critical)
+      - run: uv run poe audit
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose build api ui
+      # Rule-based smoke test through the UI's nginx proxy; the LLM path needs a real API key.
+      - name: Smoke test (LLM_PROVIDER=none)
+        env:
+          LLM_PROVIDER: none
+        run: |
+          docker compose up --detach --no-deps --wait api ui
+          curl -fsS http://127.0.0.1:8080/healthz
+          curl -fsS http://127.0.0.1:8080/api/v1/health
+          curl -fsS "http://127.0.0.1:8080/api/v1/dr/analyze?runbook=runbooks/estimate-service.md&inventory=inventories/healthy.json&wait=true" \
+            | python3 -c "import json, sys; r = json.load(sys.stdin); assert r['riskLevel'] and r['executionPlan'], r"
+          curl -fsSI http://127.0.0.1:8080/ | grep -i "content-security-policy"
+      - if: always()
+        run: docker compose logs --no-color api ui
+      - if: always()
+        run: docker compose down --volumes

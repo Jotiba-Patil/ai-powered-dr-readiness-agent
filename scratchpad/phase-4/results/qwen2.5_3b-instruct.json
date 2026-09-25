@@ -1,0 +1,56 @@
+[
+  {
+    "runbook": "estimate-service.md",
+    "inventory": "healthy.json",
+    "wall_seconds": 53.9,
+    "ai_analysis_available": true,
+    "ai_note": null,
+    "risk_score": 60,
+    "risk_level": "HIGH",
+    "rto_feasible": true,
+    "gap_types": [
+      "MISSING_STEP"
+    ],
+    "spof_count": 0,
+    "suggestion_count": 5,
+    "execution_phases": 4
+  },
+  {
+    "runbook": "payment-gateway.md",
+    "inventory": "partial-outage.json",
+    "wall_seconds": 90.6,
+    "ai_analysis_available": true,
+    "ai_note": null,
+    "risk_score": 75,
+    "risk_level": "HIGH",
+    "rto_feasible": false,
+    "gap_types": [
+      "MISSING_ROLLBACK",
+      "MISSING_STEP",
+      "NO_VALIDATION",
+      "OWNER_AMBIGUITY",
+      "UNVERIFIED_DEPENDENCY",
+      "VAGUE_INSTRUCTION"
+    ],
+    "spof_count": 1,
+    "suggestion_count": 5,
+    "execution_phases": 2
+  },
+  {
+    "runbook": "auth-service.md",
+    "inventory": "major-outage.json",
+    "wall_seconds": 38.2,
+    "ai_analysis_available": true,
+    "ai_note": null,
+    "risk_score": 60,
+    "risk_level": "HIGH",
+    "rto_feasible": false,
+    "gap_types": [
+      "MISSING_ROLLBACK",
+      "NO_VALIDATION"
+    ],
+    "spof_count": 0,
+    "suggestion_count": 5,
+    "execution_phases": 1
+  }
+]

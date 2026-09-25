@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-22T16:47:35.317425Z",
+    "runbookFile": "mock-data/runbooks/estimate-service.md",
+    "inventoryFile": "mock-data/inventories/healthy.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 53849.28199998103
+  },
+  "serviceSummary": {
+    "name": "Estimate Service",
+    "owner": "Alice Chen",
+    "statedRTO": 60.0,
+    "statedRPO": 15.0
+  },
+  "riskScore": 60,
+  "rtoAnalysis": {
+    "feasible": true,
+    "totalEstimatedMinutes": 55.0,
+    "statedRtoMinutes": 60.0,
+    "bufferMinutes": 5.0,
+    "bottleneckSteps": []
+  },
+  "dependencyHealth": [
+    {
+      "name": "estimate-postgres",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 3"
+    },
+    {
+      "name": "pricing-cache",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 4"
+    },
+    {
+      "name": "rates-kafka-topic",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "internal-dns",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    }
+  ],
+  "singlePointsOfFailure": [],
+  "gapAnalysis": [
+    {
+      "type": "MISSING_STEP",
+      "description": "No rollback steps are explicitly mentioned in the runbook.",
+      "severity": "MEDIUM",
+      "recommendation": "Add explicit rollback steps for each critical step in the runbook."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        3
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 1 complete"
+    },
+    {
+      "phase": 3,
+      "steps": [
+        4
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "step(s) 3 complete"
+    },
+    {
+      "phase": 4,
+      "steps": [
+        5
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 2, 4 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Add Rollback Steps",
+      "detail": "Include steps for rollback in case of failure for each critical step."
+    },
+    {
+      "priority": 2,
+      "title": "Clarify Validation Commands",
+      "detail": "Provide more detailed validation commands for each step to ensure clarity and accuracy."
+    },
+    {
+      "priority": 3,
+      "title": "Add Detailed Description",
+      "detail": "Provide a more detailed description of each step to ensure clarity and understanding."
+    },
+    {
+      "priority": 4,
+      "title": "Include RTO Buffer",
+      "detail": "Add a buffer step to account for potential delays in recovery steps."
+    },
+    {
+      "priority": 5,
+      "title": "Verify Messaging Dependencies",
+      "detail": "Verify the availability of the 'rates-kafka-topic' and ensure it is not a single point of failure."
+    }
+  ],
+  "summary": "The DR runbook for the 'Estimate Service' is well-structured and covers the critical steps for recovery. However, there are a few areas that can be improved for better reliability and clarity. The runbook assumes that the 'estimate-postgres' and 'pricing-cache' services are available, which is a reasonable assumption given their status. The runbook also includes steps for verifying the availability of these services, which is a good practice. The runbook does not explicitly mention steps for rollback in case of failure, which is a gap that needs to be addressed. Additionally, the runbook could benefit from more detailed validation commands and a clearer description of the steps to ensure that all stakeholders understand the process.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

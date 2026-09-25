@@ -1,0 +1,54 @@
+{
+  "services": [
+    {
+      "name": "orders-postgres",
+      "endpoint": "https://orders-postgres.us-west-2.health.internal/healthz",
+      "type": "database",
+      "region": "us-west-2",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "orders-redis",
+      "endpoint": "https://orders-redis.us-west-2.health.internal/healthz",
+      "type": "database",
+      "region": "us-west-2",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "order-events-kafka",
+      "endpoint": "https://order-events-kafka.us-west-2.health.internal/healthz",
+      "type": "messaging",
+      "region": "us-west-2",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "orders-vault",
+      "endpoint": "https://vault.us-west-2.orders.internal/v1/sys/health",
+      "type": "secrets",
+      "region": "us-west-2",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "payment-gateway-api",
+      "endpoint": "https://payments.partner.example/v2/health",
+      "type": "external",
+      "region": null,
+      "mockStatus": "UP",
+      "mockLatencyMs": 180
+    },
+    {
+      "name": "orders-k8s-standby",
+      "endpoint": "https://order-service.us-west-2.internal/healthz",
+      "type": "compute",
+      "region": "us-west-2",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "internal-dns",
+      "endpoint": "https://dns.internal/health",
+      "type": "network",
+      "region": "global",
+      "mockStatus": "UP"
+    }
+  ]
+}

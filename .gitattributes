@@ -1,0 +1,4 @@
+# Keep LF everywhere: golden reports and snapshots are compared byte for byte.
+* text=auto eol=lf
+*.png binary
+*.ico binary

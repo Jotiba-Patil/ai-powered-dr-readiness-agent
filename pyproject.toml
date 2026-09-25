@@ -1,0 +1,104 @@
+[project]
+name = "dr-readiness-agent"
+version = "0.1.0"
+description = "AI-powered Disaster Recovery readiness agent (open source, local LLM)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "httpx>=0.28.1",
+    "jinja2>=3.1",
+    "jsonschema>=4.23",
+    "markdown-it-py>=4.2.0",
+    "mcp>=2.2.0",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-multipart>=0.0.12",
+    "rich>=13.9",
+    "structlog>=24.4",
+    "typer>=0.12",
+    "uvicorn>=0.32",
+]
+
+[project.scripts]
+dr-agent = "dr_agent.cli:run"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13",
+    "mypy>=1.13",
+    "pip-audit>=2.7",
+    "poethepoet>=0.30",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "types-jsonschema>=4.23",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/src/dr_agent"]
+
+[tool.poe.tasks]
+test = ["_pytest", "_vitest"]
+format = ["_ruff-fix", "_ruff-format", "_prettier"]
+lint = ["_ruff-check", "_ruff-format-check", "_mypy", "_ui-lint"]
+dev-api = "python -m dr_agent.api"
+dev-ui = { shell = "npm --prefix frontend run dev" }
+build-ui = { shell = "npm --prefix frontend run build" }
+gen-api = ["_openapi-dump", "_openapi-ts"]
+audit = ["_pip-audit", "_npm-audit"]
+_pytest = "pytest --cov --cov-report=term-missing --cov-fail-under=80"
+_vitest = { shell = "npm --prefix frontend run test" }
+_ui-lint = { shell = "npm --prefix frontend run lint" }
+_prettier = { shell = "npm --prefix frontend run format" }
+_openapi-dump = "python -m dr_agent.api.export_openapi frontend/openapi.json"
+_openapi-ts = { shell = "npm --prefix frontend run gen:api" }
+# pip-audit checks the exact locked versions (hashes required, no pip resolution)
+_pip-audit = { shell = "uv export --frozen --all-groups --no-emit-project --format requirements-txt -q -o .venv/audit-requirements.txt && pip-audit -r .venv/audit-requirements.txt --require-hashes --disable-pip --progress-spinner off" }
+_npm-audit = { shell = "npm --prefix frontend audit --audit-level=high" }
+_ruff-fix = "ruff check --fix backend"
+_ruff-format = "ruff format backend"
+_ruff-check = "ruff check backend"
+_ruff-format-check = "ruff format --check backend"
+_mypy = "mypy --strict backend/src"
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["dr_agent"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["backend/src", "backend/tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "PT", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/tests/**" = ["S101", "S311"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "backend/src"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_decorators = false

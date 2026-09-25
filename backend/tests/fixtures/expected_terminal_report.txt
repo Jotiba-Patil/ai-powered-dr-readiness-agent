@@ -1,0 +1,27 @@
+Estimate Service readiness report
+Estimate Service is in good shape with one ownership risk to address.
+
+Risk score: 42/100 (MEDIUM)
+
+RTO: feasible -- 55 min estimated vs 60 min stated (buffer +5 min)
+
+                                   Dependency health                                   
++-------------------------------------------------------------------------------------+
+| Name              | Status           | Impact                                       |
+|-------------------+------------------+----------------------------------------------|
+| estimate-postgres | UP               | referenced by step(s) 3                      |
+| rates-kafka-topic | NOT_IN_INVENTORY | not directly referenced by any recovery step |
++-------------------------------------------------------------------------------------+
+
+                             Gaps                              
++-------------------------------------------------------------+
+| Type          | Severity | Description                      |
+|---------------+----------+----------------------------------|
+| NO_VALIDATION | MEDIUM   | Step 1 has no validation command |
++-------------------------------------------------------------+
+
+Single points of failure
+  - Only Alice can approve the traffic flip (Cross-train a second engineer)
+
+Suggestions
+  [P1] Add a rollback rehearsal: Test quarterly

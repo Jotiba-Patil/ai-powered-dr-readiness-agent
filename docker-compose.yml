@@ -1,0 +1,89 @@
+# Full demo: set LLM_API_KEY (plus LLM_BASE_URL / LLM_MODEL for a non-Mistral API) in .env,
+# then `docker compose up --build` and open http://localhost:8080.
+# No local model runs here: analysis uses a hosted OpenAI-compatible API and the API refuses
+# to start without LLM_API_KEY. Rule-based only, no key: LLM_PROVIDER=none docker compose up --build
+# Runbook execution against the bundled mock MCP server (off by default):
+#   EXECUTION_ENABLED=true EXECUTION_ALLOW_LIVE=true docker compose up --build
+name: dr-readiness-agent
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs: [/tmp]
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: dr-readiness-agent/api:local
+    <<: *hardening
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai_compatible}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.mistral.ai/v1}
+      LLM_MODEL: ${LLM_MODEL:-mistral-small-latest}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_RESPONSE_FORMAT: ${LLM_RESPONSE_FORMAT:-json_schema}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-120}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      HEALTH_CHECK_CHAOS: ${HEALTH_CHECK_CHAOS:-false}
+      CORS_ORIGINS: http://localhost:8080
+      # Execution: two opt-ins; tools are reached only through mock-mcp on the internal network.
+      EXECUTION_ENABLED: ${EXECUTION_ENABLED:-false}
+      EXECUTION_ALLOW_LIVE: ${EXECUTION_ALLOW_LIVE:-false}
+      EXECUTION_AI_PROPOSALS: ${EXECUTION_AI_PROPOSALS:-true}
+      # Analysis history (stored reports and runbooks) in the same database file.
+      HISTORY_ENABLED: ${HISTORY_ENABLED:-true}
+      HISTORY_RETENTION_DAYS: ${HISTORY_RETENTION_DAYS:-0}
+      KNOWLEDGE_ENABLED: ${KNOWLEDGE_ENABLED:-true}
+      KNOWLEDGE_IN_PROMPT: ${KNOWLEDGE_IN_PROMPT:-true}
+    volumes:
+      - dr-agent-data:/data
+    networks: [default, tools]
+    ports:
+      - "127.0.0.1:8000:8000" # API + /docs, for curl and the CLI-style demo
+    depends_on:
+      mock-mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Bundled mock MCP server (simulated DR environment). Internal network only: no published
+  # port, and only the Host header mock-mcp:* is accepted (DNS-rebinding protection).
+  mock-mcp:
+    image: dr-readiness-agent/api:local
+    <<: *hardening
+    command:
+      [
+        "python", "-m", "dr_agent.mock_mcp", "--transport", "http",
+        "--host", "0.0.0.0", "--port", "8765", "--allowed-host", "mock-mcp:*",
+      ]
+    environment:
+      MOCK_MCP_SCENARIO: ${MOCK_MCP_SCENARIO:-}
+    networks: [tools]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8765), 3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    image: dr-readiness-agent/ui:local
+    <<: *hardening
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  tools:
+    internal: true # no route out: the mock server can reach nothing and nobody reaches it but api
+
+volumes:
+  dr-agent-data: # analyses, runbooks and executions: treat as sensitive

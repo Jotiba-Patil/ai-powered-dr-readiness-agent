@@ -1,0 +1,53 @@
+{
+  "services": [
+    {
+      "name": "estimate-postgres",
+      "endpoint": "https://health.internal/estimate-postgres",
+      "type": "database",
+      "region": "us-east-1",
+      "mockStatus": "DOWN"
+    },
+    {
+      "name": "pricing-cache",
+      "endpoint": "https://health.internal/pricing-cache",
+      "type": "database",
+      "region": "us-east-1",
+      "mockStatus": "DOWN"
+    },
+    {
+      "name": "rates-kafka-topic",
+      "endpoint": "https://health.internal/rates-kafka-topic",
+      "type": "messaging",
+      "region": "us-east-1",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "internal-dns",
+      "endpoint": "https://health.internal/internal-dns",
+      "type": "network",
+      "region": "us-east-1",
+      "mockStatus": "UP"
+    },
+    {
+      "name": "payment-ledger-db",
+      "endpoint": "https://health.internal/payment-ledger-db",
+      "type": "database",
+      "region": "us-east-1",
+      "mockStatus": "DOWN"
+    },
+    {
+      "name": "fraud-check-external",
+      "endpoint": "https://health.internal/fraud-check-external",
+      "type": "external",
+      "region": "us-east-1",
+      "mockStatus": "DOWN"
+    },
+    {
+      "name": "legacy-token-vault",
+      "endpoint": "https://health.internal/legacy-token-vault",
+      "type": "secrets",
+      "region": "us-east-1",
+      "mockStatus": "UNREACHABLE"
+    }
+  ]
+}

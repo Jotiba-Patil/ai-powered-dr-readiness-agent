@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-22T16:54:43.184245Z",
+    "runbookFile": "mock-data/runbooks/estimate-service.md",
+    "inventoryFile": "mock-data/inventories/healthy.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 283454.8669999931
+  },
+  "serviceSummary": {
+    "name": "Estimate Service",
+    "owner": "Alice Chen",
+    "statedRTO": 60.0,
+    "statedRPO": 15.0
+  },
+  "riskScore": 75,
+  "rtoAnalysis": {
+    "feasible": true,
+    "totalEstimatedMinutes": 55.0,
+    "statedRtoMinutes": 60.0,
+    "bufferMinutes": 5.0,
+    "bottleneckSteps": []
+  },
+  "dependencyHealth": [
+    {
+      "name": "estimate-postgres",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 3"
+    },
+    {
+      "name": "pricing-cache",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 4"
+    },
+    {
+      "name": "rates-kafka-topic",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "internal-dns",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    }
+  ],
+  "singlePointsOfFailure": [
+    {
+      "description": "The owner of the 'Confirm the outage scope in the status dashboard' step (Alice Chen) is a single point of failure. If Alice Chen is unavailable, the recovery process will be delayed.",
+      "affectedSteps": [
+        1
+      ],
+      "mitigationSuggestion": "Assign multiple people to perform this step or have a backup person ready to take over."
+    },
+    {
+      "description": "The 'Restart the estimate-service compute nodes in the standby region' step (Bob Nguyen) is a single point of failure. If Bob Nguyen is unavailable, the recovery process will be delayed.",
+      "affectedSteps": [
+        2
+      ],
+      "mitigationSuggestion": "Assign multiple people to perform this step or have a backup person ready to take over."
+    },
+    {
+      "description": "The 'Verify estimate-postgres replica is promoted and accepting writes' step (Priya Iyer) is a single point of failure. If Priya Iyer is unavailable, the recovery process will be delayed.",
+      "affectedSteps": [
+        3
+      ],
+      "mitigationSuggestion": "Assign multiple people to perform this step or have a backup person ready to take over."
+    }
+  ],
+  "gapAnalysis": [
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "The action 'Confirm the outage scope in the status dashboard' is vague and could be more specific. The runbook should provide more details on what exactly to confirm and look for in the status dashboard.",
+      "severity": "MEDIUM",
+      "recommendation": "Add more specific instructions on what to check in the status dashboard to confirm the outage scope."
+    },
+    {
+      "type": "MISSING_STEP",
+      "description": "The runbook does not specify how to handle the case where the standby region is not available or the compute nodes are not responding. This is a critical step that should be included.",
+      "severity": "HIGH",
+      "recommendation": "Add a step to check the availability of the standby region and compute nodes, and specify the actions to take if they are not available."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        3
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 1 complete"
+    },
+    {
+      "phase": 3,
+      "steps": [
+        4
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "step(s) 2, 3 complete"
+    },
+    {
+      "phase": 4,
+      "steps": [
+        5
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 2, 3, 4 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Add a step to check the availability of the standby region and compute nodes",
+      "detail": "Include a step to verify the availability of the standby region and compute nodes, and specify the actions to take if they are not available."
+    },
+    {
+      "priority": 2,
+      "title": "Assign multiple people to critical steps",
+      "detail": "Assign multiple people to the critical steps to ensure that the recovery process can continue even if the primary owner is unavailable."
+    },
+    {
+      "priority": 3,
+      "title": "Provide more specific instructions for confirming the outage scope",
+      "detail": "Add more specific instructions on what to check in the status dashboard to confirm the outage scope."
+    },
+    {
+      "priority": 4,
+      "title": "Include a step to handle the case of a failed promotion of the estimate-postgres replica",
+      "detail": "Add a step to handle the case where the estimate-postgres replica fails to promote and accept writes, and specify the actions to take."
+    },
+    {
+      "priority": 5,
+      "title": "Document the validation commands in a separate section",
+      "detail": "Create a separate section to document the validation commands for each step, making it easier to reference and update."
+    }
+  ],
+  "summary": "This DR runbook for the Estimate Service is well-structured and covers the critical steps needed to recover the service. However, there are some implicit dependencies and single points of failure that could impact the recovery process. The runbook also lacks a few specific steps and has some vague instructions that could lead to delays or errors during the recovery process.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "riskLevel": "HIGH"
+}

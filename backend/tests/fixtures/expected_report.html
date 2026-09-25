@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DR readiness report: Estimate Service</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; color: #1a1a1a; }
+  h1, h2 { border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+  th { background: #f5f5f5; }
+  .risk-LOW { color: #1a7f37; font-weight: bold; }
+  .risk-MEDIUM { color: #9a6700; font-weight: bold; }
+  .risk-HIGH { color: #bc4c00; font-weight: bold; }
+  .risk-CRITICAL { color: #cf222e; font-weight: bold; }
+  .status-UP { color: #1a7f37; }
+  .status-DOWN, .status-UNREACHABLE { color: #cf222e; }
+  .status-NOT_IN_INVENTORY { color: #9a6700; }
+  .sev-HIGH { color: #cf222e; }
+  .sev-MEDIUM { color: #9a6700; }
+  .sev-LOW { color: #57606a; }
+  .note { background: #fff8c5; border: 1px solid #d4a72c; padding: 0.75rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>Estimate Service &mdash; DR readiness report</h1>
+  <p>Owner: Alice Chen &middot; Analyzed: 2026-09-22 10:00:00+00:00</p>
+  <p>Estimate Service is in good shape with one ownership risk to address.</p>
+  
+
+  <h2>Risk score</h2>
+  <p class="risk-MEDIUM">42/100 (MEDIUM)</p>
+
+  <h2>RTO feasibility</h2>
+  <p>
+    Feasible &mdash;
+    55.0 min estimated vs
+    60.0 min stated
+    (buffer 5.0 min)
+  </p>
+  
+
+  
+  <h2>Dependency health</h2>
+  <table>
+    <tr><th>Name</th><th>Status</th><th>Impact</th></tr>
+    
+    <tr><td>estimate-postgres</td><td class="status-UP">UP</td><td>referenced by step(s) 3</td></tr>
+    
+    <tr><td>rates-kafka-topic</td><td class="status-NOT_IN_INVENTORY">NOT_IN_INVENTORY</td><td>not directly referenced by any recovery step</td></tr>
+    
+  </table>
+  
+
+  
+  <h2>Gaps</h2>
+  <table>
+    <tr><th>Type</th><th>Severity</th><th>Description</th><th>Recommendation</th></tr>
+    
+    <tr><td>NO_VALIDATION</td><td class="sev-MEDIUM">MEDIUM</td><td>Step 1 has no validation command</td><td>Add a validation command</td></tr>
+    
+  </table>
+  
+
+  
+  <h2>Single points of failure</h2>
+  <ul>
+    
+    <li>Only Alice can approve the traffic flip &mdash; Cross-train a second engineer</li>
+    
+  </ul>
+  
+
+  
+  <h2>Execution plan</h2>
+  <table>
+    <tr><th>Phase</th><th>Steps</th><th>Minutes</th><th>Gate</th></tr>
+    
+    <tr><td>1</td><td>1, 2</td><td>15.0</td><td>none: initial phase</td></tr>
+    
+    <tr><td>2</td><td>3</td><td>10.0</td><td>step(s) 1 complete</td></tr>
+    
+  </table>
+  
+
+  
+  <h2>Suggestions</h2>
+  <ol>
+    
+    <li><strong>Add a rollback rehearsal</strong> (priority 1): Test quarterly</li>
+    
+  </ol>
+  
+</body>
+</html>

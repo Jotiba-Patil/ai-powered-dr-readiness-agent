@@ -1,0 +1,6 @@
+{
+  "drsim": {
+    "transport": "http",
+    "url": "http://mock-mcp:8765/mcp"
+  }
+}

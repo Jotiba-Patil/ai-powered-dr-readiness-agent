@@ -1,0 +1,82 @@
+[
+  {
+    "wall_seconds": 142.7,
+    "load_seconds": 15.9,
+    "prompt_tokens": 316,
+    "output_tokens": 617,
+    "tokens_per_second": 5.3,
+    "json_valid": true,
+    "schema_valid": true,
+    "spof_count": 1,
+    "gap_count": 2,
+    "gap_types": [
+      "MISSING_STEP",
+      "UNVERIFIED_DEPENDENCY"
+    ],
+    "risk_score": 75,
+    "step_deps": {
+      "1": [],
+      "2": [
+        1
+      ],
+      "3": [
+        1,
+        2
+      ],
+      "4": [
+        1,
+        2,
+        3
+      ],
+      "5": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "mentions_kafka_down": true,
+    "flags_owner_ambiguity": false,
+    "flags_unverified_dep": true
+  },
+  {
+    "wall_seconds": 131.3,
+    "load_seconds": 0.0,
+    "prompt_tokens": 316,
+    "output_tokens": 638,
+    "tokens_per_second": 5.0,
+    "json_valid": true,
+    "schema_valid": true,
+    "spof_count": 1,
+    "gap_count": 2,
+    "gap_types": [
+      "MISSING_ROLLBACK",
+      "MISSING_STEP"
+    ],
+    "risk_score": 75,
+    "step_deps": {
+      "1": [],
+      "2": [
+        1
+      ],
+      "3": [
+        1,
+        2
+      ],
+      "4": [
+        1,
+        2,
+        3
+      ],
+      "5": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "mentions_kafka_down": true,
+    "flags_owner_ambiguity": false,
+    "flags_unverified_dep": false
+  }
+]

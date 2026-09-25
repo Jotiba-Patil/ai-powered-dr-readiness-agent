@@ -1,0 +1,302 @@
+{
+  "meta": {
+    "analyzedAt": "2026-09-22T12:00:00Z",
+    "runbookFile": "mock-data/runbooks/estimate-service.md",
+    "inventoryFile": "mock-data/inventories/healthy.json",
+    "agentVersion": "0.1.0",
+    "analysisTimeMs": 0.0
+  },
+  "serviceSummary": {
+    "name": "Estimate Service",
+    "owner": "Alice Chen",
+    "statedRTO": 60.0,
+    "statedRPO": 15.0
+  },
+  "riskScore": 15,
+  "rtoAnalysis": {
+    "feasible": true,
+    "totalEstimatedMinutes": 55.0,
+    "statedRtoMinutes": 60.0,
+    "bufferMinutes": 5.0,
+    "bottleneckSteps": []
+  },
+  "dependencyHealth": [
+    {
+      "name": "estimate-postgres",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 3"
+    },
+    {
+      "name": "pricing-cache",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "referenced by step(s) 4"
+    },
+    {
+      "name": "rates-kafka-topic",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    },
+    {
+      "name": "internal-dns",
+      "runbookAssumes": "available",
+      "actualStatus": "UP",
+      "impact": "not directly referenced by any recovery step"
+    }
+  ],
+  "singlePointsOfFailure": [
+    {
+      "description": "Alice Chen is the only owner who can confirm the outage and flip traffic.",
+      "affectedSteps": [
+        1,
+        5
+      ],
+      "mitigationSuggestion": "Train a secondary on-call owner for the confirm and cutover steps."
+    }
+  ],
+  "gapAnalysis": [
+    {
+      "type": "HISTORICAL",
+      "description": "Step 2 took a median of 28.5 min in 4 live runs against an estimate of 15 min.",
+      "severity": "MEDIUM",
+      "recommendation": "Update step 2's estimate to the measured time and recheck the RTO, or speed the step up."
+    },
+    {
+      "type": "HISTORICAL",
+      "description": "Step 3 failed or was rolled back in 2 of 4 past live runs.",
+      "severity": "HIGH",
+      "recommendation": "Fix the cause of step 3's failures and rehearse it before relying on it in a real recovery."
+    },
+    {
+      "type": "HISTORICAL",
+      "description": "Completed live runs took a median of 75 min end to end, above the stated RTO of 60 min.",
+      "severity": "HIGH",
+      "recommendation": "Treat the RTO as not met in practice: shorten the slowest phases or agree a realistic RTO."
+    },
+    {
+      "type": "HISTORICAL",
+      "description": "Dependency rates-kafka-topic was down or unreachable in 4 of the last 6 analyses.",
+      "severity": "MEDIUM",
+      "recommendation": "Make rates-kafka-topic more reliable or add a fallback for it to the runbook."
+    },
+    {
+      "type": "VAGUE_INSTRUCTION",
+      "description": "Step 1's 'confirm the outage scope' has no explicit pass/fail threshold.",
+      "severity": "LOW",
+      "recommendation": "Define what dashboard state counts as confirmed."
+    }
+  ],
+  "executionPlan": [
+    {
+      "phase": 1,
+      "steps": [
+        1,
+        2
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "none: initial phase, no prerequisites"
+    },
+    {
+      "phase": 2,
+      "steps": [
+        3
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 1 complete"
+    },
+    {
+      "phase": 3,
+      "steps": [
+        4
+      ],
+      "estimatedMinutes": 15.0,
+      "gate": "step(s) 3 complete"
+    },
+    {
+      "phase": 4,
+      "steps": [
+        5
+      ],
+      "estimatedMinutes": 10.0,
+      "gate": "step(s) 2, 4 complete"
+    }
+  ],
+  "suggestions": [
+    {
+      "priority": 1,
+      "title": "Rehearse the rollback path",
+      "detail": "Run the DNS revert quarterly so it is proven, not just documented."
+    }
+  ],
+  "summary": "Estimate Service's runbook is well structured: every step has a named owner, a time estimate and a validation command, and the recovery plan fits inside the 60-minute RTO with a 5-minute buffer. The main residual risk is that Alice Chen is the sole approver for two critical steps, creating a single point of failure if she is unavailable during an incident. Addressing that ownership gap and rehearsing the rollback path would make this runbook close to ideal.",
+  "aiAnalysisAvailable": true,
+  "aiNote": null,
+  "historicalInsights": {
+    "serviceName": "Estimate Service",
+    "analysesConsidered": 6,
+    "liveRuns": 4,
+    "dryRuns": 2,
+    "riskScores": [
+      20,
+      18,
+      25,
+      30,
+      22,
+      15
+    ],
+    "executions": [
+      {
+        "executionId": "run-4",
+        "state": "COMPLETED",
+        "startedAt": "2026-09-20T10:00:00Z",
+        "elapsedMinutes": 80.0,
+        "statedRtoMinutes": 60.0
+      },
+      {
+        "executionId": "run-3",
+        "state": "COMPLETED",
+        "startedAt": "2026-09-13T10:00:00Z",
+        "elapsedMinutes": 70.5,
+        "statedRtoMinutes": 60.0
+      },
+      {
+        "executionId": "run-2",
+        "state": "FAILED",
+        "startedAt": "2026-09-06T10:00:00Z",
+        "elapsedMinutes": 35.0,
+        "statedRtoMinutes": 60.0
+      },
+      {
+        "executionId": "run-1",
+        "state": "COMPLETED",
+        "startedAt": "2026-08-30T10:00:00Z",
+        "elapsedMinutes": 75.0,
+        "statedRtoMinutes": 60.0
+      }
+    ],
+    "steps": [
+      {
+        "stepNumber": 1,
+        "fingerprint": "f92352aef26464b8b47e29a793d8f2a88e7b17e6fcd50da4ab9f1aa7c3c7d326",
+        "targetSystem": null,
+        "estimatedMinutes": 5.0,
+        "liveRuns": 4,
+        "succeeded": 4,
+        "failed": 0,
+        "rolledBack": 0,
+        "skipped": 0,
+        "manualDone": 0,
+        "unknown": 0,
+        "retries": 0,
+        "medianActiveMinutes": 4.0,
+        "maxActiveMinutes": 6.0,
+        "medianElapsedMinutes": 5.0
+      },
+      {
+        "stepNumber": 2,
+        "fingerprint": "b4044bdb541b9ad5749bfaa7c775ad44b4be16da991393ac21ce666f79557125",
+        "targetSystem": "standby-region-compute",
+        "estimatedMinutes": 15.0,
+        "liveRuns": 4,
+        "succeeded": 4,
+        "failed": 0,
+        "rolledBack": 0,
+        "skipped": 0,
+        "manualDone": 0,
+        "unknown": 0,
+        "retries": 0,
+        "medianActiveMinutes": 28.5,
+        "maxActiveMinutes": 35.0,
+        "medianElapsedMinutes": 31.0
+      },
+      {
+        "stepNumber": 3,
+        "fingerprint": "b63e8674ba375060a22bcca8ac80c395aa365da4d2337b3b3d056e1e2a0c44a1",
+        "targetSystem": null,
+        "estimatedMinutes": 10.0,
+        "liveRuns": 4,
+        "succeeded": 2,
+        "failed": 1,
+        "rolledBack": 1,
+        "skipped": 0,
+        "manualDone": 0,
+        "unknown": 0,
+        "retries": 2,
+        "medianActiveMinutes": 12.0,
+        "maxActiveMinutes": 18.0,
+        "medianElapsedMinutes": 14.0
+      },
+      {
+        "stepNumber": 4,
+        "fingerprint": "21422a5ff0b4294835c7e2a0f9c5ca42fb5e286033f68df425f748536c9efe00",
+        "targetSystem": null,
+        "estimatedMinutes": 15.0,
+        "liveRuns": 4,
+        "succeeded": 3,
+        "failed": 0,
+        "rolledBack": 0,
+        "skipped": 1,
+        "manualDone": 0,
+        "unknown": 0,
+        "retries": 0,
+        "medianActiveMinutes": 14.0,
+        "maxActiveMinutes": 16.0,
+        "medianElapsedMinutes": 15.0
+      },
+      {
+        "stepNumber": 5,
+        "fingerprint": "19c0af3be74a8aea8e57bf4b31ac1b844d341688f5c4c449df07e4c0484a372e",
+        "targetSystem": null,
+        "estimatedMinutes": 10.0,
+        "liveRuns": 4,
+        "succeeded": 3,
+        "failed": 0,
+        "rolledBack": 0,
+        "skipped": 0,
+        "manualDone": 0,
+        "unknown": 1,
+        "retries": 0,
+        "medianActiveMinutes": 9.0,
+        "maxActiveMinutes": 11.0,
+        "medianElapsedMinutes": 10.0
+      }
+    ],
+    "dependencies": [
+      {
+        "name": "estimate-postgres",
+        "analyses": 6,
+        "up": 6,
+        "down": 0,
+        "unreachable": 0,
+        "notInInventory": 0
+      },
+      {
+        "name": "internal-dns",
+        "analyses": 6,
+        "up": 6,
+        "down": 0,
+        "unreachable": 0,
+        "notInInventory": 0
+      },
+      {
+        "name": "pricing-cache",
+        "analyses": 6,
+        "up": 5,
+        "down": 0,
+        "unreachable": 0,
+        "notInInventory": 1
+      },
+      {
+        "name": "rates-kafka-topic",
+        "analyses": 6,
+        "up": 2,
+        "down": 3,
+        "unreachable": 1,
+        "notInInventory": 0
+      }
+    ]
+  },
+  "riskLevel": "LOW"
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DR readiness report: {{ report.service_summary.name }}</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; color: #1a1a1a; }
+  h1, h2 { border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+  th { background: #f5f5f5; }
+  .risk-LOW { color: #1a7f37; font-weight: bold; }
+  .risk-MEDIUM { color: #9a6700; font-weight: bold; }
+  .risk-HIGH { color: #bc4c00; font-weight: bold; }
+  .risk-CRITICAL { color: #cf222e; font-weight: bold; }
+  .status-UP { color: #1a7f37; }
+  .status-DOWN, .status-UNREACHABLE { color: #cf222e; }
+  .status-NOT_IN_INVENTORY { color: #9a6700; }
+  .sev-HIGH { color: #cf222e; }
+  .sev-MEDIUM { color: #9a6700; }
+  .sev-LOW { color: #57606a; }
+  .note { background: #fff8c5; border: 1px solid #d4a72c; padding: 0.75rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>{{ report.service_summary.name }} &mdash; DR readiness report</h1>
+  <p>Owner: {{ report.service_summary.owner }} &middot; Analyzed: {{ report.meta.analyzed_at }}</p>
+  <p>{{ report.summary }}</p>
+  {% if not report.ai_analysis_available and report.ai_note %}
+  <p class="note">{{ report.ai_note }}</p>
+  {% endif %}
+
+  <h2>Risk score</h2>
+  <p class="risk-{{ report.risk_level.value }}">{{ report.risk_score }}/100 ({{ report.risk_level.value }})</p>
+
+  <h2>RTO feasibility</h2>
+  <p>
+    {{ "Feasible" if report.rto_analysis.feasible else "NOT feasible" }} &mdash;
+    {{ report.rto_analysis.total_estimated_minutes }} min estimated vs
+    {{ report.rto_analysis.stated_rto_minutes }} min stated
+    (buffer {{ report.rto_analysis.buffer_minutes }} min)
+  </p>
+  {% if report.rto_analysis.bottleneck_steps %}
+  <p>Bottleneck steps: {{ report.rto_analysis.bottleneck_steps | join(", ") }}</p>
+  {% endif %}
+
+  {% if report.dependency_health %}
+  <h2>Dependency health</h2>
+  <table>
+    <tr><th>Name</th><th>Status</th><th>Impact</th></tr>
+    {% for dep in report.dependency_health %}
+    <tr><td>{{ dep.name }}</td><td class="status-{{ dep.actual_status.value }}">{{ dep.actual_status.value }}</td><td>{{ dep.impact }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if report.gap_analysis %}
+  <h2>Gaps</h2>
+  <table>
+    <tr><th>Type</th><th>Severity</th><th>Description</th><th>Recommendation</th></tr>
+    {% for gap in report.gap_analysis %}
+    <tr><td>{{ gap.type.value }}</td><td class="sev-{{ gap.severity.value }}">{{ gap.severity.value }}</td><td>{{ gap.description }}</td><td>{{ gap.recommendation }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if report.single_points_of_failure %}
+  <h2>Single points of failure</h2>
+  <ul>
+    {% for spof in report.single_points_of_failure %}
+    <li>{{ spof.description }} &mdash; {{ spof.mitigation_suggestion }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if report.execution_plan %}
+  <h2>Execution plan</h2>
+  <table>
+    <tr><th>Phase</th><th>Steps</th><th>Minutes</th><th>Gate</th></tr>
+    {% for phase in report.execution_plan %}
+    <tr><td>{{ phase.phase }}</td><td>{{ phase.steps | join(", ") }}</td><td>{{ phase.estimated_minutes }}</td><td>{{ phase.gate }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if report.suggestions %}
+  <h2>Suggestions</h2>
+  <ol>
+    {% for suggestion in report.suggestions | sort(attribute="priority") %}
+    <li><strong>{{ suggestion.title }}</strong> (priority {{ suggestion.priority }}): {{ suggestion.detail }}</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  {%- set history = report.historical_insights %}
+  {%- if history %}
+
+  <h2>Historical insights</h2>
+  <p>{{ history.live_runs }} live run(s) and {{ history.analyses_considered }} earlier analysis(es) of this service ({{ history.dry_runs }} dry run(s) not measured).</p>
+  {% if history.steps %}
+  <table>
+    <tr><th>Step</th><th>Live runs</th><th>Succeeded</th><th>Failed</th><th>Rolled back</th><th>Median minutes</th><th>Estimate</th></tr>
+    {% for step in history.steps %}
+    <tr><td>{{ step.step_number }}</td><td>{{ step.live_runs }}</td><td>{{ step.succeeded }}</td><td>{{ step.failed }}</td><td>{{ step.rolled_back }}</td><td>{{ step.median_active_minutes if step.median_active_minutes is not none else "-" }}</td><td>{{ step.estimated_minutes }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  {% if history.executions %}
+  <p>Recent live runs: {% for run in history.executions %}{{ run.state }} in {{ run.elapsed_minutes }} min{% if not loop.last %}; {% endif %}{% endfor %} (stated RTO {{ history.executions[0].stated_rto_minutes }} min).</p>
+  {% endif %}
+  {%- endif %}
+</body>
+</html>

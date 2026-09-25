@@ -1,0 +1,4410 @@
+{
+  "components": {
+    "schemas": {
+      "AnalysisDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "report": {
+            "$ref": "#/components/schemas/DRReadinessReport"
+          },
+          "stale": {
+            "description": "Older than HISTORY_STALE_AFTER_HOURS; health may differ now",
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AnalysisSummary"
+          }
+        },
+        "required": [
+          "summary",
+          "report",
+          "provenance",
+          "stale"
+        ],
+        "title": "AnalysisDetail",
+        "type": "object"
+      },
+      "AnalysisPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextBefore": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pass as `before` for the next page; null on the last page",
+            "title": "Nextbefore"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AnalysisPage",
+        "type": "object"
+      },
+      "AnalysisRef": {
+        "additionalProperties": false,
+        "description": "The readiness analysis an execution was created from (API and CLI require one).",
+        "properties": {
+          "aiAnalysisAvailable": {
+            "title": "Aianalysisavailable",
+            "type": "boolean"
+          },
+          "analyzedAt": {
+            "format": "date-time",
+            "title": "Analyzedat",
+            "type": "string"
+          },
+          "jobId": {
+            "title": "Jobid",
+            "type": "string"
+          },
+          "riskLevel": {
+            "title": "Risklevel",
+            "type": "string"
+          },
+          "riskScore": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Riskscore",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "jobId",
+          "riskScore",
+          "riskLevel",
+          "aiAnalysisAvailable",
+          "analyzedAt"
+        ],
+        "title": "AnalysisRef",
+        "type": "object"
+      },
+      "AnalysisSource": {
+        "enum": [
+          "api",
+          "cli"
+        ],
+        "title": "AnalysisSource",
+        "type": "string"
+      },
+      "AnalysisSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "aiAnalysisAvailable": {
+            "title": "Aianalysisavailable",
+            "type": "boolean"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "title": "Completedat",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "executionCount": {
+            "minimum": 0.0,
+            "title": "Executioncount",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inventoryLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inventorylabel"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "riskScore": {
+            "title": "Riskscore",
+            "type": "integer"
+          },
+          "rtoFeasible": {
+            "title": "Rtofeasible",
+            "type": "boolean"
+          },
+          "runbookLabel": {
+            "title": "Runbooklabel",
+            "type": "string"
+          },
+          "serviceName": {
+            "title": "Servicename",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/AnalysisSource"
+          }
+        },
+        "required": [
+          "id",
+          "serviceName",
+          "owner",
+          "source",
+          "createdAt",
+          "completedAt",
+          "runbookLabel",
+          "inventoryLabel",
+          "riskScore",
+          "riskLevel",
+          "rtoFeasible",
+          "aiAnalysisAvailable",
+          "executionCount"
+        ],
+        "title": "AnalysisSummary",
+        "type": "object"
+      },
+      "AnalyzeJsonRequest": {
+        "additionalProperties": false,
+        "description": "JSON form of `POST /api/v1/dr/analyze` (the brief's `{ runbookMarkdown, inventory? }`).",
+        "properties": {
+          "inventory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SystemInventory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "runbookMarkdown": {
+            "description": "The runbook as Markdown text.",
+            "minLength": 1,
+            "title": "Runbookmarkdown",
+            "type": "string"
+          },
+          "runbookName": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Label for report meta.runbookFile.",
+            "title": "Runbookname"
+          }
+        },
+        "required": [
+          "runbookMarkdown"
+        ],
+        "title": "AnalyzeJsonRequest",
+        "type": "object"
+      },
+      "Approval": {
+        "additionalProperties": false,
+        "properties": {
+          "approver": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Approver",
+            "type": "string"
+          },
+          "callHash": {
+            "title": "Callhash",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "verifyHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verifyhash"
+          }
+        },
+        "required": [
+          "approver",
+          "callHash",
+          "createdAt"
+        ],
+        "title": "Approval",
+        "type": "object"
+      },
+      "ApproveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "approver": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Approver",
+            "type": "string"
+          },
+          "callHash": {
+            "description": "The hash the approver was shown",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Callhash",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "kind": {
+            "default": "main",
+            "enum": [
+              "main",
+              "rollback"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approver",
+          "callHash"
+        ],
+        "title": "ApproveRequest",
+        "type": "object"
+      },
+      "AuditEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "executionId": {
+            "title": "Executionid",
+            "type": "string"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Payload",
+            "type": "object"
+          },
+          "prevHash": {
+            "title": "Prevhash",
+            "type": "string"
+          },
+          "seq": {
+            "minimum": 1.0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "type": {
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "executionId",
+          "type",
+          "actor",
+          "prevHash",
+          "hash",
+          "createdAt"
+        ],
+        "title": "AuditEvent",
+        "type": "object"
+      },
+      "AuditView": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "verification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChainVerification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "title": "AuditView",
+        "type": "object"
+      },
+      "CallKind": {
+        "enum": [
+          "main",
+          "verify",
+          "rollback"
+        ],
+        "title": "CallKind",
+        "type": "string"
+      },
+      "CallRequest": {
+        "additionalProperties": false,
+        "description": "Replace a call, or accept it as it is (`call` omitted on the main call).",
+        "properties": {
+          "call": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlannedToolCall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "editor": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Editor",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CallKind",
+            "default": "main"
+          }
+        },
+        "required": [
+          "editor"
+        ],
+        "title": "CallRequest",
+        "type": "object"
+      },
+      "CallSource": {
+        "enum": [
+          "annotated",
+          "ai_proposed",
+          "edited"
+        ],
+        "title": "CallSource",
+        "type": "string"
+      },
+      "ChainVerification": {
+        "additionalProperties": false,
+        "properties": {
+          "brokenAtSeq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brokenatseq"
+          },
+          "events": {
+            "title": "Events",
+            "type": "integer"
+          },
+          "head": {
+            "title": "Head",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "head",
+          "events"
+        ],
+        "title": "ChainVerification",
+        "type": "object"
+      },
+      "CreateExecutionRequest": {
+        "additionalProperties": false,
+        "description": "An execution is always created from a finished readiness analysis.",
+        "properties": {
+          "analysisJobId": {
+            "description": "A succeeded analysis job",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Analysisjobid",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExecutionMode",
+            "default": "dry_run"
+          },
+          "startedBy": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Startedby",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysisJobId",
+          "startedBy"
+        ],
+        "title": "CreateExecutionRequest",
+        "type": "object"
+      },
+      "DRReadinessReport": {
+        "additionalProperties": false,
+        "properties": {
+          "aiAnalysisAvailable": {
+            "default": true,
+            "title": "Aianalysisavailable",
+            "type": "boolean"
+          },
+          "aiNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ainote"
+          },
+          "dependencyHealth": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyHealth"
+            },
+            "title": "Dependencyhealth",
+            "type": "array"
+          },
+          "executionPlan": {
+            "items": {
+              "$ref": "#/components/schemas/ExecutionPhase"
+            },
+            "title": "Executionplan",
+            "type": "array"
+          },
+          "gapAnalysis": {
+            "items": {
+              "$ref": "#/components/schemas/Gap"
+            },
+            "title": "Gapanalysis",
+            "type": "array"
+          },
+          "historicalInsights": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ServiceHistory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ReportMeta"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel",
+            "readOnly": true
+          },
+          "riskScore": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Riskscore",
+            "type": "integer"
+          },
+          "rtoAnalysis": {
+            "$ref": "#/components/schemas/RtoAnalysis"
+          },
+          "serviceSummary": {
+            "$ref": "#/components/schemas/ServiceSummary"
+          },
+          "singlePointsOfFailure": {
+            "items": {
+              "$ref": "#/components/schemas/SinglePointOfFailure"
+            },
+            "title": "Singlepointsoffailure",
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "meta",
+          "serviceSummary",
+          "riskScore",
+          "rtoAnalysis",
+          "summary",
+          "riskLevel"
+        ],
+        "title": "DRReadinessReport",
+        "type": "object"
+      },
+      "DependencyHealth": {
+        "additionalProperties": false,
+        "properties": {
+          "actualStatus": {
+            "$ref": "#/components/schemas/DependencyStatus"
+          },
+          "impact": {
+            "description": "Which steps are affected",
+            "title": "Impact",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "runbookAssumes": {
+            "const": "available",
+            "default": "available",
+            "title": "Runbookassumes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "actualStatus",
+          "impact"
+        ],
+        "title": "DependencyHealth",
+        "type": "object"
+      },
+      "DependencyStatus": {
+        "description": "Health as seen from a runbook dependency; adds the not-in-inventory case.",
+        "enum": [
+          "UP",
+          "DOWN",
+          "UNREACHABLE",
+          "NOT_IN_INVENTORY"
+        ],
+        "title": "DependencyStatus",
+        "type": "string"
+      },
+      "DependencyTrend": {
+        "additionalProperties": false,
+        "properties": {
+          "analyses": {
+            "minimum": 0.0,
+            "title": "Analyses",
+            "type": "integer"
+          },
+          "down": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Down",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notInInventory": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Notininventory",
+            "type": "integer"
+          },
+          "unreachable": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unreachable",
+            "type": "integer"
+          },
+          "up": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Up",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "analyses"
+        ],
+        "title": "DependencyTrend",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "additionalProperties": false,
+        "description": "The shared error shape: `{error, code, details?}`.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "Execution": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "auditHead": {
+            "default": "",
+            "title": "Audithead",
+            "type": "string"
+          },
+          "auditSeq": {
+            "default": 0,
+            "title": "Auditseq",
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExecutionMode"
+          },
+          "pauseReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pausereason"
+          },
+          "runbookLabel": {
+            "title": "Runbooklabel",
+            "type": "string"
+          },
+          "runbookSha256": {
+            "title": "Runbooksha256",
+            "type": "string"
+          },
+          "startedBy": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Startedby",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ExecutionState",
+            "default": "CREATED"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepRun"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "toolCallsUsed": {
+            "default": 0,
+            "title": "Toolcallsused",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "runbookLabel",
+          "runbookSha256",
+          "startedBy",
+          "createdAt",
+          "updatedAt",
+          "steps"
+        ],
+        "title": "Execution",
+        "type": "object"
+      },
+      "ExecutionMode": {
+        "enum": [
+          "dry_run",
+          "live"
+        ],
+        "title": "ExecutionMode",
+        "type": "string"
+      },
+      "ExecutionOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "elapsedMinutes": {
+            "minimum": 0.0,
+            "title": "Elapsedminutes",
+            "type": "number"
+          },
+          "executionId": {
+            "title": "Executionid",
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "COMPLETED",
+              "FAILED",
+              "ABORTED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "statedRtoMinutes": {
+            "exclusiveMinimum": 0.0,
+            "title": "Statedrtominutes",
+            "type": "number"
+          }
+        },
+        "required": [
+          "executionId",
+          "state",
+          "startedAt",
+          "elapsedMinutes",
+          "statedRtoMinutes"
+        ],
+        "title": "ExecutionOutcome",
+        "type": "object"
+      },
+      "ExecutionPhase": {
+        "additionalProperties": false,
+        "properties": {
+          "estimatedMinutes": {
+            "minimum": 0.0,
+            "title": "Estimatedminutes",
+            "type": "number"
+          },
+          "gate": {
+            "description": "What must be true before proceeding",
+            "title": "Gate",
+            "type": "string"
+          },
+          "phase": {
+            "minimum": 1.0,
+            "title": "Phase",
+            "type": "integer"
+          },
+          "steps": {
+            "description": "Steps that can run in parallel",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "phase",
+          "steps",
+          "estimatedMinutes",
+          "gate"
+        ],
+        "title": "ExecutionPhase",
+        "type": "object"
+      },
+      "ExecutionSettingsView": {
+        "additionalProperties": false,
+        "properties": {
+          "allowLive": {
+            "title": "Allowlive",
+            "type": "boolean"
+          },
+          "approvalTimeoutMinutes": {
+            "title": "Approvaltimeoutminutes",
+            "type": "number"
+          },
+          "approvalsByRisk": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/RiskClass"
+            },
+            "title": "Approvalsbyrisk",
+            "type": "object"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "identityVerified": {
+            "const": false,
+            "default": false,
+            "title": "Identityverified",
+            "type": "boolean"
+          },
+          "maxToolCalls": {
+            "title": "Maxtoolcalls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "allowLive",
+          "approvalTimeoutMinutes",
+          "maxToolCalls",
+          "approvalsByRisk"
+        ],
+        "title": "ExecutionSettingsView",
+        "type": "object"
+      },
+      "ExecutionState": {
+        "enum": [
+          "CREATED",
+          "RUNNING",
+          "PAUSED",
+          "COMPLETED",
+          "FAILED",
+          "ABORTED"
+        ],
+        "title": "ExecutionState",
+        "type": "string"
+      },
+      "ExecutionSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "analysisJobId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysisjobid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExecutionMode"
+          },
+          "runbookLabel": {
+            "title": "Runbooklabel",
+            "type": "string"
+          },
+          "startedBy": {
+            "title": "Startedby",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ExecutionState"
+          },
+          "steps": {
+            "title": "Steps",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "analysisJobId",
+          "state",
+          "mode",
+          "runbookLabel",
+          "startedBy",
+          "createdAt",
+          "updatedAt",
+          "steps"
+        ],
+        "title": "ExecutionSummary",
+        "type": "object"
+      },
+      "Gap": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "recommendation": {
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "type": {
+            "$ref": "#/components/schemas/GapType"
+          }
+        },
+        "required": [
+          "type",
+          "description",
+          "severity",
+          "recommendation"
+        ],
+        "title": "Gap",
+        "type": "object"
+      },
+      "GapType": {
+        "enum": [
+          "MISSING_STEP",
+          "VAGUE_INSTRUCTION",
+          "NO_VALIDATION",
+          "MISSING_ROLLBACK",
+          "UNVERIFIED_DEPENDENCY",
+          "OWNER_AMBIGUITY",
+          "HISTORICAL"
+        ],
+        "title": "GapType",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "uptime": {
+            "description": "Seconds since the API started.",
+            "minimum": 0.0,
+            "title": "Uptime",
+            "type": "number"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "uptime"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "HealthStatus": {
+        "enum": [
+          "UP",
+          "DOWN",
+          "UNREACHABLE"
+        ],
+        "title": "HealthStatus",
+        "type": "string"
+      },
+      "InventoryService": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint": {
+            "format": "uri",
+            "minLength": 1,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "expectedStatus": {
+            "const": "UP",
+            "default": "UP",
+            "title": "Expectedstatus",
+            "type": "string"
+          },
+          "mockLatencyMs": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mocklatencyms"
+          },
+          "mockStatus": {
+            "$ref": "#/components/schemas/HealthStatus",
+            "default": "UP"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Region"
+          },
+          "type": {
+            "$ref": "#/components/schemas/InventoryServiceType"
+          }
+        },
+        "required": [
+          "name",
+          "endpoint",
+          "type"
+        ],
+        "title": "InventoryService",
+        "type": "object"
+      },
+      "InventoryServiceType": {
+        "enum": [
+          "database",
+          "messaging",
+          "secrets",
+          "compute",
+          "network",
+          "external"
+        ],
+        "title": "InventoryServiceType",
+        "type": "string"
+      },
+      "JobState": {
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "JobState",
+        "type": "string"
+      },
+      "JobView": {
+        "additionalProperties": false,
+        "properties": {
+          "completedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completedat"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "historySaved": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the report was stored (null while history is off)",
+            "title": "Historysaved"
+          },
+          "jobId": {
+            "title": "Jobid",
+            "type": "string"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DRReadinessReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobState"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "createdAt"
+        ],
+        "title": "JobView",
+        "type": "object"
+      },
+      "JsonValue": {},
+      "LifecycleRequest": {
+        "additionalProperties": false,
+        "description": "`pause`, `abort` and `close` need a reason; `start` and `resume` do not.",
+        "properties": {
+          "actor": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Actor",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "title": "LifecycleRequest",
+        "type": "object"
+      },
+      "PlannedToolCall": {
+        "additionalProperties": false,
+        "description": "A tool call written in a runbook annotation: `<server>/<tool> {JSON arguments}`.\n\nUntrusted input like any other runbook text: it is only a request, checked\nagainst the execution policy and approved by humans before anything runs.",
+        "properties": {
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
+          },
+          "server": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Server",
+            "type": "string"
+          },
+          "tool": {
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server",
+          "tool"
+        ],
+        "title": "PlannedToolCall",
+        "type": "object"
+      },
+      "ProposalNote": {
+        "additionalProperties": false,
+        "description": "Why the model proposed a step's call; untrusted text, shown to reviewers as-is.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "rationale": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "title": "ProposalNote",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "description": "How a report was produced; never the API key or base URL.",
+        "properties": {
+          "agentVersion": {
+            "title": "Agentversion",
+            "type": "string"
+          },
+          "llmModel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmmodel"
+          },
+          "llmProvider": {
+            "title": "Llmprovider",
+            "type": "string"
+          },
+          "promptVersion": {
+            "title": "Promptversion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "llmProvider",
+          "promptVersion",
+          "agentVersion"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "ReportMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "agentVersion": {
+            "title": "Agentversion",
+            "type": "string"
+          },
+          "analysisTimeMs": {
+            "minimum": 0.0,
+            "title": "Analysistimems",
+            "type": "number"
+          },
+          "analyzedAt": {
+            "format": "date-time",
+            "title": "Analyzedat",
+            "type": "string"
+          },
+          "inventoryFile": {
+            "title": "Inventoryfile",
+            "type": "string"
+          },
+          "runbookFile": {
+            "title": "Runbookfile",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analyzedAt",
+          "runbookFile",
+          "inventoryFile",
+          "agentVersion",
+          "analysisTimeMs"
+        ],
+        "title": "ReportMeta",
+        "type": "object"
+      },
+      "RiskClass": {
+        "enum": [
+          "read",
+          "write",
+          "destructive"
+        ],
+        "title": "RiskClass",
+        "type": "string"
+      },
+      "RiskLevel": {
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "RiskLevel",
+        "type": "string"
+      },
+      "RtoAnalysis": {
+        "additionalProperties": false,
+        "properties": {
+          "bottleneckSteps": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Bottlenecksteps",
+            "type": "array"
+          },
+          "bufferMinutes": {
+            "description": "Stated RTO minus estimated total; may be negative",
+            "title": "Bufferminutes",
+            "type": "number"
+          },
+          "feasible": {
+            "title": "Feasible",
+            "type": "boolean"
+          },
+          "statedRtoMinutes": {
+            "exclusiveMinimum": 0.0,
+            "title": "Statedrtominutes",
+            "type": "number"
+          },
+          "totalEstimatedMinutes": {
+            "minimum": 0.0,
+            "title": "Totalestimatedminutes",
+            "type": "number"
+          }
+        },
+        "required": [
+          "feasible",
+          "totalEstimatedMinutes",
+          "statedRtoMinutes",
+          "bufferMinutes"
+        ],
+        "title": "RtoAnalysis",
+        "type": "object"
+      },
+      "SampleFile": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ],
+        "title": "SampleFile",
+        "type": "object"
+      },
+      "SampleList": {
+        "additionalProperties": false,
+        "description": "Paths relative to `API_ALLOWED_DIR`, usable with `GET /api/v1/dr/analyze`.",
+        "properties": {
+          "inventories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Inventories",
+            "type": "array"
+          },
+          "runbooks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Runbooks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "runbooks",
+          "inventories"
+        ],
+        "title": "SampleList",
+        "type": "object"
+      },
+      "ServiceHistory": {
+        "additionalProperties": false,
+        "description": "Facts computed by code from stored analyses and live executions only.",
+        "properties": {
+          "analysesConsidered": {
+            "minimum": 0.0,
+            "title": "Analysesconsidered",
+            "type": "integer"
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyTrend"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "dryRuns": {
+            "description": "Counted but never measured",
+            "minimum": 0.0,
+            "title": "Dryruns",
+            "type": "integer"
+          },
+          "executions": {
+            "description": "Newest first",
+            "items": {
+              "$ref": "#/components/schemas/ExecutionOutcome"
+            },
+            "title": "Executions",
+            "type": "array"
+          },
+          "liveRuns": {
+            "minimum": 0.0,
+            "title": "Liveruns",
+            "type": "integer"
+          },
+          "riskScores": {
+            "description": "Oldest first",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Riskscores",
+            "type": "array"
+          },
+          "serviceName": {
+            "title": "Servicename",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepHistory"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "serviceName",
+          "analysesConsidered",
+          "liveRuns",
+          "dryRuns"
+        ],
+        "title": "ServiceHistory",
+        "type": "object"
+      },
+      "ServiceSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "statedRPO": {
+            "description": "Minutes",
+            "exclusiveMinimum": 0.0,
+            "title": "Statedrpo",
+            "type": "number"
+          },
+          "statedRTO": {
+            "description": "Minutes",
+            "exclusiveMinimum": 0.0,
+            "title": "Statedrto",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "owner",
+          "statedRTO",
+          "statedRPO"
+        ],
+        "title": "ServiceSummary",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "SinglePointOfFailure": {
+        "additionalProperties": false,
+        "properties": {
+          "affectedSteps": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Affectedsteps",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "mitigationSuggestion": {
+            "title": "Mitigationsuggestion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "mitigationSuggestion"
+        ],
+        "title": "SinglePointOfFailure",
+        "type": "object"
+      },
+      "StepDecisionRequest": {
+        "additionalProperties": false,
+        "description": "`reject`, `skip` and `manual` need a reason; `verify` needs `succeeded`.",
+        "properties": {
+          "actor": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Actor",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "succeeded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Succeeded"
+          }
+        },
+        "required": [
+          "actor"
+        ],
+        "title": "StepDecisionRequest",
+        "type": "object"
+      },
+      "StepHistory": {
+        "additionalProperties": false,
+        "properties": {
+          "estimatedMinutes": {
+            "minimum": 0.0,
+            "title": "Estimatedminutes",
+            "type": "number"
+          },
+          "failed": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Failed",
+            "type": "integer"
+          },
+          "fingerprint": {
+            "description": "SHA-256 of the normalized action and target system",
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "liveRuns": {
+            "minimum": 0.0,
+            "title": "Liveruns",
+            "type": "integer"
+          },
+          "manualDone": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Manualdone",
+            "type": "integer"
+          },
+          "maxActiveMinutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxactiveminutes"
+          },
+          "medianActiveMinutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Running (or manual) until the step's final state",
+            "title": "Medianactiveminutes"
+          },
+          "medianElapsedMinutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Including approval waits after the run started",
+            "title": "Medianelapsedminutes"
+          },
+          "retries": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Retries",
+            "type": "integer"
+          },
+          "rolledBack": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rolledback",
+            "type": "integer"
+          },
+          "skipped": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "stepNumber": {
+            "description": "In the runbook it was matched to",
+            "minimum": 1.0,
+            "title": "Stepnumber",
+            "type": "integer"
+          },
+          "succeeded": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Succeeded",
+            "type": "integer"
+          },
+          "targetSystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetsystem"
+          },
+          "unknown": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Unknown",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stepNumber",
+          "fingerprint",
+          "estimatedMinutes",
+          "liveRuns"
+        ],
+        "title": "StepHistory",
+        "type": "object"
+      },
+      "StepRun": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "attempt": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "call": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolCall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dependsOn": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Dependson",
+            "type": "array"
+          },
+          "estimatedMinutes": {
+            "title": "Estimatedminutes",
+            "type": "number"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "phase": {
+            "minimum": 1.0,
+            "title": "Phase",
+            "type": "integer"
+          },
+          "policyErrors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Policyerrors",
+            "type": "array"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProposalNote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rollback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolCall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/StepState",
+            "default": "PLANNED"
+          },
+          "stepNumber": {
+            "minimum": 1.0,
+            "title": "Stepnumber",
+            "type": "integer"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "targetSystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetsystem"
+          },
+          "verify": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolCall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waitingSince": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waitingsince"
+          }
+        },
+        "required": [
+          "stepNumber",
+          "phase",
+          "action",
+          "owner",
+          "estimatedMinutes"
+        ],
+        "title": "StepRun",
+        "type": "object"
+      },
+      "StepState": {
+        "enum": [
+          "PLANNED",
+          "PROPOSED",
+          "AWAITING_APPROVAL",
+          "APPROVED",
+          "REJECTED",
+          "RUNNING",
+          "VERIFYING",
+          "SUCCEEDED",
+          "FAILED",
+          "UNKNOWN",
+          "ROLLED_BACK",
+          "AWAITING_MANUAL",
+          "MANUAL_DONE",
+          "SKIPPED"
+        ],
+        "title": "StepState",
+        "type": "string"
+      },
+      "StoredExecution": {
+        "additionalProperties": false,
+        "description": "A past execution of an analysis, read-only: its steps and its verified audit log.",
+        "properties": {
+          "audit": {
+            "$ref": "#/components/schemas/AuditView"
+          },
+          "execution": {
+            "$ref": "#/components/schemas/Execution"
+          }
+        },
+        "required": [
+          "execution",
+          "audit"
+        ],
+        "title": "StoredExecution",
+        "type": "object"
+      },
+      "Suggestion": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "priority": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "priority",
+          "title",
+          "detail"
+        ],
+        "title": "Suggestion",
+        "type": "object"
+      },
+      "SystemInventory": {
+        "additionalProperties": false,
+        "properties": {
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryService"
+            },
+            "title": "Services",
+            "type": "array"
+          }
+        },
+        "title": "SystemInventory",
+        "type": "object"
+      },
+      "ToolCall": {
+        "additionalProperties": false,
+        "properties": {
+          "approvals": {
+            "items": {
+              "$ref": "#/components/schemas/Approval"
+            },
+            "title": "Approvals",
+            "type": "array"
+          },
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
+          },
+          "callHash": {
+            "title": "Callhash",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CallKind"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "riskClass": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "server": {
+            "title": "Server",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/CallSource"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startedat"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "server",
+          "tool",
+          "source",
+          "callHash"
+        ],
+        "title": "ToolCall",
+        "type": "object"
+      },
+      "ToolResult": {
+        "additionalProperties": false,
+        "description": "Outcome of one call. `ok=False` is a tool-level failure reported by the server.",
+        "properties": {
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "simulated": {
+            "default": false,
+            "title": "Simulated",
+            "type": "boolean"
+          },
+          "structured": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "ToolResult",
+        "type": "object"
+      },
+      "ToolView": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "inputSchema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Inputschema",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskClass"
+          },
+          "server": {
+            "title": "Server",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server",
+          "name",
+          "description",
+          "risk",
+          "inputSchema"
+        ],
+        "title": "ToolView",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Parse DR runbooks, check dependency health and produce readiness reports.",
+    "title": "DR Readiness Agent API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/analyses": {
+      "get": {
+        "description": "Stored analyses, newest first.",
+        "operationId": "list_analyses_api_v1_analyses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "service",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Service"
+            }
+          },
+          {
+            "in": "query",
+            "name": "riskLevel",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RiskLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risklevel"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "`nextBefore` of the last page",
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`nextBefore` of the last page",
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "List Analyses",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/analyses/{analysis_id}": {
+      "delete": {
+        "description": "`409` when executions refer to it: their audit trail must keep its source.",
+        "operationId": "delete_analysis_api_v1_analyses__analysis_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Delete Analysis",
+        "tags": [
+          "history"
+        ]
+      },
+      "get": {
+        "operationId": "get_analysis_api_v1_analyses__analysis_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Analysis",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/executions": {
+      "get": {
+        "description": "Executions created from this analysis (also readable while execution is off).",
+        "operationId": "get_analysis_executions_api_v1_analyses__analysis_id__executions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExecutionSummary"
+                  },
+                  "title": "Response Get Analysis Executions Api V1 Analyses  Analysis Id  Executions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Analysis Executions",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/executions/{execution_id}": {
+      "get": {
+        "description": "One execution of this analysis with its steps and its verified audit log (read-only).",
+        "operationId": "get_analysis_execution_api_v1_analyses__analysis_id__executions__execution_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredExecution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Analysis Execution",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/report.html": {
+      "get": {
+        "operationId": "get_analysis_report_html_api_v1_analyses__analysis_id__report_html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Analysis Report Html",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/runbook": {
+      "get": {
+        "description": "The runbook Markdown exactly as analyzed, as a text download.",
+        "operationId": "get_analysis_runbook_api_v1_analyses__analysis_id__runbook_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Analysis Runbook",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/dr/analyze": {
+      "get": {
+        "description": "Analyze server-side files, given as paths relative to `API_ALLOWED_DIR`.",
+        "operationId": "get_analyze_api_v1_dr_analyze_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "runbook",
+            "required": true,
+            "schema": {
+              "examples": [
+                "runbooks/x.md"
+              ],
+              "maxLength": 512,
+              "minLength": 1,
+              "title": "Runbook",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inventory",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inventory"
+            }
+          },
+          {
+            "description": "Wait (bounded) and return the report if done.",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Wait (bounded) and return the report if done.",
+              "title": "Wait",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DRReadinessReport"
+                }
+              }
+            },
+            "description": "wait=true and the job finished in time"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Job accepted; poll the Location header"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get Analyze",
+        "tags": [
+          "analysis"
+        ]
+      },
+      "post": {
+        "description": "Analyze an uploaded runbook: multipart (`runbook` + optional `inventory` files) or JSON.",
+        "operationId": "post_analyze_api_v1_dr_analyze_post",
+        "parameters": [
+          {
+            "description": "Wait (bounded) and return the report if done.",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Wait (bounded) and return the report if done.",
+              "title": "Wait",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeJsonRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "inventory": {
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "runbook": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "runbook"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DRReadinessReport"
+                }
+              }
+            },
+            "description": "wait=true and the job finished in time"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Job accepted; poll the Location header"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Post Analyze",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/api/v1/dr/jobs/{job_id}": {
+      "get": {
+        "description": "Poll a job; `report` is set once `status` is `succeeded`, `error` once `failed`.\n\nJobs no longer in memory (after a restart) are answered from the history.",
+        "operationId": "get_job_api_v1_dr_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Wait (bounded) and return the report if done.",
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Wait (bounded) and return the report if done.",
+              "title": "Wait",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/api/v1/dr/jobs/{job_id}/report.html": {
+      "get": {
+        "description": "The finished job's report as a self-contained HTML download (autoescaped).",
+        "operationId": "get_job_report_html_api_v1_dr_jobs__job_id__report_html_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job Report Html",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/api/v1/dr/samples": {
+      "get": {
+        "description": "Sample runbooks and inventories, as paths relative to `API_ALLOWED_DIR`.",
+        "operationId": "list_samples_api_v1_dr_samples_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Samples",
+        "tags": [
+          "samples"
+        ]
+      }
+    },
+    "/api/v1/dr/samples/file": {
+      "get": {
+        "description": "The text of one sample file (a path from `GET /api/v1/dr/samples`).",
+        "operationId": "get_sample_api_v1_dr_samples_file_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "examples": [
+                "runbooks/x.md"
+              ],
+              "maxLength": 512,
+              "minLength": 1,
+              "title": "Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleFile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Sample",
+        "tags": [
+          "samples"
+        ]
+      }
+    },
+    "/api/v1/execution/settings": {
+      "get": {
+        "description": "Whether execution is available, so a client can explain why it is not.",
+        "operationId": "execution_settings_api_v1_execution_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Execution Settings",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions": {
+      "get": {
+        "operationId": "list_executions_api_v1_executions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExecutionSummary"
+                  },
+                  "title": "Response List Executions Api V1 Executions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "List Executions",
+        "tags": [
+          "execution"
+        ]
+      },
+      "post": {
+        "description": "Plan an execution from a finished analysis; it follows the report's execution plan.\n\n`409 CONFLICT` while the analysis is unfinished or failed. Stored analyses\nwork after a restart too. `mode: live` needs `EXECUTION_ALLOW_LIVE=true`.",
+        "operationId": "create_execution_api_v1_executions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Create Execution",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}": {
+      "get": {
+        "operationId": "get_execution_detail_api_v1_executions__execution_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Get Execution Detail",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}/audit": {
+      "get": {
+        "operationId": "get_audit_api_v1_executions__execution_id__audit_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Recompute the hash chain",
+            "in": "query",
+            "name": "verify",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Recompute the hash chain",
+              "title": "Verify",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Get Audit",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}/steps/{step_number}/approve": {
+      "post": {
+        "description": "Approve the call with the hash you were shown (`409 STALE_CALL` if it changed).",
+        "operationId": "approve_api_v1_executions__execution_id__steps__step_number__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_number",
+            "required": true,
+            "schema": {
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Step Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}/steps/{step_number}/call": {
+      "put": {
+        "description": "Accept (omit `call`) or replace a call. Clears the step's approvals.",
+        "operationId": "set_call_api_v1_executions__execution_id__steps__step_number__call_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_number",
+            "required": true,
+            "schema": {
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Step Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Set Call",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}/steps/{step_number}/{action}": {
+      "post": {
+        "operationId": "decide_api_v1_executions__execution_id__steps__step_number___action__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_number",
+            "required": true,
+            "schema": {
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Step Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "reject",
+                "skip",
+                "manual",
+                "mark-done",
+                "verify",
+                "retry",
+                "rollback"
+              ],
+              "title": "Action",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Decide",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/executions/{execution_id}/{action}": {
+      "post": {
+        "description": "Lifecycle. `abort` is the kill switch; calls already sent become `UNKNOWN`.",
+        "operationId": "change_execution_api_v1_executions__execution_id___action__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "start",
+                "pause",
+                "resume",
+                "abort",
+                "close"
+              ],
+              "title": "Action",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Execution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "Change Execution",
+        "tags": [
+          "execution"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/services/{service_name}/history": {
+      "get": {
+        "description": "Measured facts from this service's stored analyses and finished live runs (ADR 0009).\n\nSteps are keyed by fingerprint; a report's `historicalInsights` has them matched\nto that runbook's step numbers instead.",
+        "operationId": "get_service_history_api_v1_services__service_name__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Service Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Get Service History",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/tools": {
+      "get": {
+        "description": "Allow-listed tools with their effective risk class (never server credentials).",
+        "operationId": "list_tools_api_v1_tools_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ToolView"
+                  },
+                  "title": "Response List Tools Api V1 Tools Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          }
+        },
+        "summary": "List Tools",
+        "tags": [
+          "execution"
+        ]
+      }
+    }
+  }
+}
