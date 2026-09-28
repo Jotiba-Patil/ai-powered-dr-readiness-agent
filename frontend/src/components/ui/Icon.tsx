@@ -27,6 +27,13 @@ const PATHS = {
   arrow: "M5 12h14m-5-5l5 5-5 5",
   download: "M12 4v11m0 0l-4-4m4 4l4-4M5 20h14",
   server: "M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01",
+  pause: "M9 5v14M15 5v14",
+  trash: "M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3",
+  mail: "M4 6h16v12H4zM4 7l8 6 8-6",
+  calendar: "M5 5h14v15H5zM5 10h14M9 3v4M15 3v4",
+  plus: "M12 5v14M5 12h14",
+  refresh: "M20 11a8 8 0 00-14.9-3M4 5v4h4M4 13a8 8 0 0014.9 3M20 19v-4h-4",
+  close: "M6 6l12 12M18 6L6 18",
 } as const;
 
 export type IconName = keyof typeof PATHS;

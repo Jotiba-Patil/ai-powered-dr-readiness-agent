@@ -1,8 +1,9 @@
 import { useId } from "react";
 import type { Cadence } from "../../api/types";
 import { WEEKDAYS } from "../../lib/scheduleLabels";
+import { FIELD } from "./fieldStyles";
 
-const INPUT = "rounded-md border border-slate-300 px-2 py-1";
+const INPUT = FIELD;
 
 const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
 
@@ -28,7 +29,7 @@ export function CadenceFields({
   return (
     <div className="flex flex-wrap gap-3">
       <label htmlFor={kindId} className="text-sm">
-        <span className="block text-slate-700">Repeat</span>
+        <span className="block font-medium text-slate-700">Repeat</span>
         <select
           id={kindId}
           value={cadence.kind}
@@ -43,7 +44,7 @@ export function CadenceFields({
       </label>
       {cadence.kind === "monthly" && (
         <label htmlFor={monthDayId} className="text-sm">
-          <span className="block text-slate-700">Day of month</span>
+          <span className="block font-medium text-slate-700">Day of month</span>
           <select
             id={monthDayId}
             value={String(cadence.day)}
@@ -64,7 +65,7 @@ export function CadenceFields({
       )}
       {cadence.kind === "weekly" && (
         <label htmlFor={dayId} className="text-sm">
-          <span className="block text-slate-700">Day</span>
+          <span className="block font-medium text-slate-700">Day</span>
           <select
             id={dayId}
             value={cadence.weekday}
@@ -83,7 +84,7 @@ export function CadenceFields({
       )}
       {cadence.kind === "hourly" ? (
         <label htmlFor={valueId} className="text-sm">
-          <span className="block text-slate-700">Minute past the hour</span>
+          <span className="block font-medium text-slate-700">Minute past the hour</span>
           <input
             id={valueId}
             type="number"
@@ -96,7 +97,7 @@ export function CadenceFields({
         </label>
       ) : (
         <label htmlFor={valueId} className="text-sm">
-          <span className="block text-slate-700">Time</span>
+          <span className="block font-medium text-slate-700">Time</span>
           <input
             id={valueId}
             type="time"

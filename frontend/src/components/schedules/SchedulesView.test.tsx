@@ -22,9 +22,14 @@ describe("SchedulesView", () => {
     expect(row).toHaveTextContent("Daily 06:00 UTC");
     expect(row).toHaveTextContent("28 Sep 2026, 06:00 UTC");
     expect(row).toHaveTextContent("Succeeded");
-    expect(row).toHaveTextContent("Risk 72 high · RTO not feasible");
+    expect(row).toHaveTextContent("72 High");
+    expect(row).toHaveTextContent("RTO not feasible");
     expect(row).toHaveTextContent("Active");
     expect(screen.getByText(/they never execute. Emails are sent over SMTP./)).toBeInTheDocument();
+    const overview = screen.getByRole("list", { name: "Schedule overview" });
+    expect(overview).toHaveTextContent("Active schedules1 of 1");
+    expect(overview).toHaveTextContent("Needs attention1");
+    expect(overview).toHaveTextContent("EmailsSMTP");
   });
 
   it("explains a disabled scheduler and load errors", async () => {
@@ -81,6 +86,37 @@ describe("SchedulesView", () => {
     expect(api.resumeSchedule).toHaveBeenCalledWith("sched-2", "Bob");
   });
 
+  it("offers quick pause lengths and toggles a schedule's runs", async () => {
+    const api = makeApi();
+    render(<SchedulesView api={api} pollIntervalMs={0} />);
+    await signIn();
+    const name = screen.getByRole("button", { name: "Payment daily" });
+    await userEvent.click(name);
+    expect(name).toHaveAttribute("aria-expanded", "true");
+    expect(
+      await screen.findByRole("region", { name: "Runs of Payment daily" }),
+    ).toBeInTheDocument();
+    await userEvent.click(name);
+    expect(screen.queryByRole("region", { name: "Runs of Payment daily" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Pause Payment daily" }));
+    const form = screen.getByRole("form", { name: "Pause Payment daily" });
+    await userEvent.click(within(form).getByRole("button", { name: "1 day" }));
+    expect(within(form).getByLabelText(/Pause until/)).not.toHaveValue("");
+    await userEvent.click(within(form).getByRole("button", { name: "Pause until then" }));
+    const until = vi.mocked(api.pauseSchedule).mock.calls[0]?.[2] ?? "";
+    const hours = (Date.parse(until) - Date.now()) / 3_600_000;
+    expect(hours).toBeGreaterThan(23);
+    expect(hours).toBeLessThan(25);
+  });
+
+  it("shows an empty state", async () => {
+    render(<SchedulesView api={makeApi({ listSchedules: vi.fn(async () => []) })} />);
+    expect(await screen.findByText("No schedules yet. Create one below.")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Schedule overview" })).toHaveTextContent(
+      "None planned",
+    );
+  });
+
   it("pauses and resumes everything", async () => {
     const api = makeApi();
     render(<SchedulesView api={api} />);
@@ -133,6 +169,7 @@ describe("SchedulesView", () => {
     expect(await within(runs).findByText("Analyzing…")).toBeInTheDocument();
     await userEvent.click(within(runs).getByRole("button", { name: "Cancel run" }));
     expect(api.cancelScheduleRun).toHaveBeenCalledWith("run-1");
+    expect(within(runs).getByText("Scheduled")).toBeInTheDocument();
     await userEvent.click(within(runs).getByRole("button", { name: "Close runs" }));
     expect(screen.queryByRole("region", { name: "Runs of Payment daily" })).not.toBeInTheDocument();
   });
