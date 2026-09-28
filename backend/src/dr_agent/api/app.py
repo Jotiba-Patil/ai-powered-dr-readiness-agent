@@ -9,6 +9,8 @@ unfinished analysis jobs before closing the client (graceful shutdown). With
 store, restart recovery) and stops it again in the same task, as anyio requires.
 With `HISTORY_ENABLED=true` (default) every finished analysis is stored (ADR 0007),
 and with `KNOWLEDGE_ENABLED=true` new analyses use that history (ADR 0009).
+With `SCHEDULER_ENABLED=true` the scheduler ticks in the background (ADR 0010); it
+is stopped before the job store at shutdown, so its runs end as interrupted.
 """
 
 from __future__ import annotations
@@ -39,13 +41,18 @@ from dr_agent.api.routes import router
 from dr_agent.api.routes_execution import router as execution_router
 from dr_agent.api.routes_history import router as history_router
 from dr_agent.api.routes_samples import router as samples_router
+from dr_agent.api.routes_scheduler import router as scheduler_router
+from dr_agent.api.routes_schedules import router as schedules_router
 from dr_agent.api.routes_steps import router as steps_router
+from dr_agent.api.scheduled_jobs import job_analyzer
 from dr_agent.config import Settings
 from dr_agent.execution_runtime import open_execution_runtime
 from dr_agent.health.base import HealthChecker
 from dr_agent.history.service import open_history, provenance
 from dr_agent.knowledge.service import open_knowledge
 from dr_agent.llm.base import LLMProvider
+from dr_agent.notify.senders import Notifier
+from dr_agent.scheduling_runtime import open_schedules
 from dr_agent.tools.mcp_convert import ClientFactory
 from dr_agent.utils.logging import get_logger
 from dr_agent.wiring import build_checker, build_llm
@@ -62,6 +69,7 @@ def create_app(
     monotonic: Callable[[], float] = time.monotonic,
     mcp_factories: Mapping[str, ClientFactory] | None = None,
     execution_tick_seconds: float = DEFAULT_TICK_SECONDS,
+    notifier: Notifier | None = None,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -84,16 +92,26 @@ def create_app(
                 max_stored=settings.api_max_stored_jobs,
                 on_success=history_saver(history, provenance(settings)) if history else None,
             )
+            chosen_checker = checker or build_checker(settings, client, chosen_rng)
+            knowledge = open_knowledge(settings) if history else None
+            schedules = None
+            if settings.scheduler_enabled:
+                analyze = job_analyzer(
+                    jobs, llm=chosen_llm, checker=chosen_checker, knowledge=knowledge
+                )
+                schedules = await open_schedules(settings, analyze, notifier=notifier)
+                schedules.scheduler.start()
             app.state.dr = AppState(
                 settings=settings,
                 llm=chosen_llm,
-                checker=checker or build_checker(settings, client, chosen_rng),
+                checker=chosen_checker,
                 jobs=jobs,
                 started_at=monotonic(),
                 monotonic=monotonic,
                 execution=execution,
                 history=history,
-                knowledge=open_knowledge(settings) if history else None,
+                knowledge=knowledge,
+                schedules=schedules,
             )
             _log.info(
                 "api_started",
@@ -101,10 +119,13 @@ def create_app(
                 llm_provider=settings.llm_provider,
                 execution_enabled=execution is not None,
                 history_enabled=history is not None,
+                scheduler_enabled=schedules is not None,
             )
             try:
                 yield
             finally:
+                if schedules is not None:
+                    await schedules.scheduler.shutdown()
                 await jobs.shutdown()
                 _log.info("api_stopped")
 
@@ -129,5 +150,7 @@ def create_app(
     app.include_router(execution_router)
     app.include_router(steps_router)
     app.include_router(history_router)
+    app.include_router(schedules_router)
+    app.include_router(scheduler_router)
     app.openapi = openapi_builder(app)  # type: ignore[method-assign]  # documented FastAPI hook
     return app

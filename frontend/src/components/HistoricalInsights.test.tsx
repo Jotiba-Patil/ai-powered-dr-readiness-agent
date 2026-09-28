@@ -18,7 +18,7 @@ describe("HistoricalInsights", () => {
     const row = within(section).getByRole("row", { name: /^2 / });
     expect(row).toHaveTextContent("18 min (estimate 10 min) (over estimate)");
     expect(section).toHaveTextContent(
-      "2026-09-24 10:00 UTC: COMPLETED in 42 min (over the 30 min RTO)",
+      "24 Sep 2026, 10:00 UTC: COMPLETED in 42 min (over the 30 min RTO)",
     );
     expect(section).toHaveTextContent("payments-db: down or unreachable in 2 of 3 analyses");
     expect(section).not.toHaveTextContent("internal-dns");

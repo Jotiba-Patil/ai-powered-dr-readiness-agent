@@ -1,5 +1,6 @@
 // Analysis history endpoints (design analysis-history section 6).
 import type { Client } from "openapi-fetch";
+import { tzQuery } from "./client";
 import { call } from "./http";
 import type { paths } from "./schema";
 import type {
@@ -57,8 +58,9 @@ export function createHistoryApi(root: string, client: Client<paths>) {
       return `${path(analysisId)}/runbook`;
     },
 
+    /** HTML export; times in it are shown in this browser's timezone. */
     analysisReportHtmlUrl(analysisId: string): string {
-      return `${path(analysisId)}/report.html`;
+      return `${path(analysisId)}/report.html${tzQuery()}`;
     },
   };
 }

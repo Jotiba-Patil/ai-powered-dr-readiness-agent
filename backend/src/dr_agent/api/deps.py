@@ -15,6 +15,7 @@ from dr_agent.health.base import HealthChecker
 from dr_agent.history.service import History
 from dr_agent.knowledge.service import KnowledgeBase
 from dr_agent.llm.base import LLMProvider
+from dr_agent.scheduling.service import ScheduleService
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,7 @@ class AppState:
     monotonic: Callable[[], float] = time.monotonic
     execution: ExecutionService | None = None  # None while EXECUTION_ENABLED=false
     history: History | None = None  # None while HISTORY_ENABLED=false
+    schedules: ScheduleService | None = None  # None while SCHEDULER_ENABLED=false
     knowledge: KnowledgeBase | None = None  # None unless history and KNOWLEDGE_ENABLED
 
     @property

@@ -6,7 +6,7 @@ import { makeApi } from "../../test/fixtures";
 import { makeDetail, makeSummary } from "../../test/historyFixtures";
 import { HistoryView } from "./HistoryView";
 
-const ROW = /Open Payment Gateway analysis from 2026-09-25 09:00 UTC/;
+const ROW = /Open Payment Gateway analysis from 25 Sep 2026, 09:00 UTC/;
 
 describe("HistoryView", () => {
   it("lists stored analyses and opens one with its report", async () => {
@@ -94,7 +94,7 @@ describe("HistoryView", () => {
       });
     render(<HistoryView api={makeApi({ listAnalyses })} />);
     await userEvent.click(await screen.findByRole("button", { name: "Load more" }));
-    expect(await screen.findByText("2026-09-24 09:00 UTC")).toBeInTheDocument();
+    expect(await screen.findByText("24 Sep 2026, 09:00 UTC")).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(3);
     expect(listAnalyses).toHaveBeenLastCalledWith(
       expect.objectContaining({ before: "2026-09-25T09:00:00Z" }),

@@ -1,5 +1,5 @@
 import type { ServiceHistory } from "../api/types";
-import { minutes, utcMinute } from "../lib/labels";
+import { minutes, formatDateTime } from "../lib/labels";
 import { Section } from "./Section";
 
 /** What past analyses and live runs of this service showed (measured by the server, ADR 0009). */
@@ -59,7 +59,7 @@ export function HistoricalInsights({ history }: { history: ServiceHistory }) {
           <ul className="text-sm">
             {runs.map((run) => (
               <li key={run.executionId}>
-                {utcMinute(run.startedAt)}: {run.state} in {minutes(run.elapsedMinutes)}
+                {formatDateTime(run.startedAt)}: {run.state} in {minutes(run.elapsedMinutes)}
                 {run.elapsedMinutes > run.statedRtoMinutes &&
                   ` (over the ${minutes(run.statedRtoMinutes)} RTO)`}
               </li>

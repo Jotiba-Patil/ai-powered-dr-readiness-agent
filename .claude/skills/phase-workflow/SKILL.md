@@ -15,8 +15,8 @@ description: How to execute one phase of docs/IMPLEMENTATION_PLAN.md end to end 
 8. Do not begin the next phase without being asked.
 
 ## Phase order
-0 decisions and spike, 1 foundation, 2 parser, 3 health validator, 4 LLM analysis and formatter, 5 CLI and API, 6 React dashboard, 7 hardening and delivery, 8 execution design (docs only), 9 execution core, 10 MCP integration, 11 execution API, CLI, UI and delivery, 12 history and knowledge-base design (docs only), 13 analysis history, 14 knowledge base.
+0 decisions and spike, 1 foundation, 2 parser, 3 health validator, 4 LLM analysis and formatter, 5 CLI and API, 6 React dashboard, 7 hardening and delivery, 8 execution design (docs only), 9 execution core, 10 MCP integration, 11 execution API, CLI, UI and delivery, 12 history and knowledge-base design (docs only), 13 analysis history, 14 knowledge base, 15 scheduled-analysis design (docs only), 16 scheduler and notification core, 17 schedules API, UI, CLI and delivery, 18 monthly schedules, runbook uploads, browser timezone, one date-time format.
 
-Phases 0-14 are done. New work needs a new phase in the plan first.
+Phases 0-18 are done (15 approved 2026-09-26). New work needs a new phase in the plan first.
 
 If `uv run poe ...` fails with `uv trampoline failed to canonicalize script path`, run the same steps via `uv run python -m <tool>` (mypy, pytest, pip_audit, poethepoet) and note it in the phase summary.

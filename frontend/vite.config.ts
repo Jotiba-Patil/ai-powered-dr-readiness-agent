@@ -9,6 +9,8 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 700 },
   test: {
     environment: "jsdom",
+    // Times are shown in the browser's zone; pin it so tests read the same on every machine.
+    env: { TZ: "UTC" },
     setupFiles: ["src/test/setup.ts"],
     css: false,
     coverage: {

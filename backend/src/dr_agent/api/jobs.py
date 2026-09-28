@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 
 from dr_agent.api.errors import json_safe
 from dr_agent.api.schemas import ErrorBody, JobState, JobView
+from dr_agent.history.models import AnalysisSource
 from dr_agent.models.inventory import SystemInventory
 from dr_agent.models.report import DRReadinessReport
 from dr_agent.models.runbook import Runbook
@@ -32,7 +33,7 @@ OnSuccess = Callable[["Job"], Awaitable[bool]]
 
 _log = get_logger("dr_agent.api.jobs")
 _INTERNAL_ERROR = ErrorBody(error="internal error during analysis", code="INTERNAL_ERROR")
-_CANCELLED = ErrorBody(error="job cancelled (server shutting down)", code="CANCELLED")
+_CANCELLED = ErrorBody(error="job cancelled (by a user or at shutdown)", code="CANCELLED")
 
 
 @dataclass
@@ -51,6 +52,7 @@ class Job:
     inventory: SystemInventory | None = None
     inventory_label: str | None = None
     history_saved: bool | None = None  # None while history is off or the job is unfinished
+    source: AnalysisSource = AnalysisSource.API  # stored with the analysis (ADR 0010)
 
     def view(self) -> JobView:
         return JobView(
@@ -89,6 +91,7 @@ class JobStore:
         label: str = "runbook.md",
         inventory: SystemInventory | None = None,
         inventory_label: str | None = None,
+        source: AnalysisSource = AnalysisSource.API,
     ) -> Job:
         self._evict_finished()
         if len(self._jobs) >= self._max_stored:
@@ -103,6 +106,7 @@ class JobStore:
             runbook_label=label,
             inventory=inventory,
             inventory_label=inventory_label,
+            source=source,
         )
         self._jobs[job.id] = job
         job.task = asyncio.create_task(self._run(job, work), name=f"analysis-{job.id}")
@@ -112,6 +116,14 @@ class JobStore:
         job = self._jobs.get(job_id)
         if job is None:
             raise NotFoundError(f"unknown job id: {job_id}")
+        return job
+
+    async def cancel(self, job_id: str) -> Job:
+        """Stop an unfinished job (a cancelled scheduled run); a finished one is left as is."""
+        job = self.get(job_id)
+        if job.task is not None and not job.task.done():
+            job.task.cancel()
+            await asyncio.gather(job.task, return_exceptions=True)
         return job
 
     async def wait(self, job: Job, timeout_seconds: float) -> None:

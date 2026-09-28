@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DR readiness: {{ facts.service }}</title></head>
+<body style="font-family: Arial, sans-serif; color: #1f2937; max-width: 640px;">
+<h2 style="margin-bottom: 4px;">DR readiness: {{ facts.service }}</h2>
+<p style="margin-top: 0; color: #6b7280;">Scheduled analysis summary</p>
+<table cellpadding="6" style="border-collapse: collapse;">
+{% for label, value in lines %}
+{% if label %}
+<tr><th align="left" style="border-bottom: 1px solid #e5e7eb;">{{ label }}</th>
+<td style="border-bottom: 1px solid #e5e7eb;">{% if label == "Open in the dashboard" %}<a href="{{ value }}">{{ value }}</a>{% else %}{{ value }}{% endif %}</td></tr>
+{% endif %}
+{% endfor %}
+</table>
+<p style="color: #6b7280;">Details, gaps and the execution plan are in the report.</p>
+</body>
+</html>

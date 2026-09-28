@@ -99,7 +99,8 @@
       "AnalysisSource": {
         "enum": [
           "api",
-          "cli"
+          "cli",
+          "scheduled"
         ],
         "title": "AnalysisSource",
         "type": "string"
@@ -515,6 +516,100 @@
         "title": "CreateExecutionRequest",
         "type": "object"
       },
+      "CreateScheduleRequest": {
+        "additionalProperties": false,
+        "description": "A new schedule. `timezone` defaults to `SCHEDULER_DEFAULT_TIMEZONE` when left out.",
+        "properties": {
+          "cadence": {
+            "discriminator": {
+              "mapping": {
+                "daily": "#/components/schemas/DailyCadence",
+                "hourly": "#/components/schemas/HourlyCadence",
+                "monthly": "#/components/schemas/MonthlyCadence",
+                "weekly": "#/components/schemas/WeeklyCadence"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HourlyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/DailyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyCadence"
+              }
+            ],
+            "title": "Cadence"
+          },
+          "createdBy": {
+            "description": "Name of the person",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Createdby",
+            "type": "string"
+          },
+          "inventoryPath": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inventorypath"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "recipients": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipients"
+          },
+          "runbookPath": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Runbookpath",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "runbookPath",
+          "cadence",
+          "createdBy"
+        ],
+        "title": "CreateScheduleRequest",
+        "type": "object"
+      },
       "DRReadinessReport": {
         "additionalProperties": false,
         "properties": {
@@ -614,6 +709,28 @@
         "title": "DRReadinessReport",
         "type": "object"
       },
+      "DailyCadence": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "daily",
+            "default": "daily",
+            "title": "Kind",
+            "type": "string"
+          },
+          "time": {
+            "description": "Local time HH:MM",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time"
+        ],
+        "title": "DailyCadence",
+        "type": "object"
+      },
       "DependencyHealth": {
         "additionalProperties": false,
         "properties": {
@@ -698,6 +815,15 @@
         ],
         "title": "DependencyTrend",
         "type": "object"
+      },
+      "EmailState": {
+        "enum": [
+          "sent",
+          "failed",
+          "skipped"
+        ],
+        "title": "EmailState",
+        "type": "string"
       },
       "ErrorBody": {
         "additionalProperties": false,
@@ -1121,6 +1247,28 @@
         "title": "HealthStatus",
         "type": "string"
       },
+      "HourlyCadence": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "hourly",
+            "default": "hourly",
+            "title": "Kind",
+            "type": "string"
+          },
+          "minute": {
+            "maximum": 59.0,
+            "minimum": 0.0,
+            "title": "Minute",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "minute"
+        ],
+        "title": "HourlyCadence",
+        "type": "object"
+      },
       "InventoryService": {
         "additionalProperties": false,
         "properties": {
@@ -1302,6 +1450,74 @@
         "title": "LifecycleRequest",
         "type": "object"
       },
+      "MonthlyCadence": {
+        "additionalProperties": false,
+        "description": "Day 1-31 or \"last\"; a day the month lacks runs on its last day (never skipped).",
+        "properties": {
+          "day": {
+            "anyOf": [
+              {
+                "maximum": 31.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "const": "last",
+                "type": "string"
+              }
+            ],
+            "title": "Day"
+          },
+          "kind": {
+            "const": "monthly",
+            "default": "monthly",
+            "title": "Kind",
+            "type": "string"
+          },
+          "time": {
+            "description": "Local time HH:MM",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "time"
+        ],
+        "title": "MonthlyCadence",
+        "type": "object"
+      },
+      "PauseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "description": "Name of the person",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "By",
+            "type": "string"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Resume automatically then; empty pauses until resumed",
+            "title": "Until"
+          }
+        },
+        "required": [
+          "by"
+        ],
+        "title": "PauseRequest",
+        "type": "object"
+      },
       "PlannedToolCall": {
         "additionalProperties": false,
         "description": "A tool call written in a runbook annotation: `<server>/<tool> {JSON arguments}`.\n\nUntrusted input like any other runbook text: it is only a request, checked\nagainst the execution policy and approved by humans before anything runs.",
@@ -1392,6 +1608,49 @@
         "title": "Provenance",
         "type": "object"
       },
+      "RecipientPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "addresses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Addresses",
+            "type": "array"
+          },
+          "dropped": {
+            "description": "Addresses refused by NOTIFY_ALLOWED_DOMAINS",
+            "title": "Dropped",
+            "type": "integer"
+          },
+          "ownerFound": {
+            "description": "The runbook owner matched the contact directory",
+            "title": "Ownerfound",
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/RecipientSource"
+          }
+        },
+        "required": [
+          "addresses",
+          "source",
+          "ownerFound",
+          "dropped"
+        ],
+        "title": "RecipientPreview",
+        "type": "object"
+      },
+      "RecipientSource": {
+        "enum": [
+          "override",
+          "directory",
+          "default",
+          "none"
+        ],
+        "title": "RecipientSource",
+        "type": "string"
+      },
       "ReportMeta": {
         "additionalProperties": false,
         "properties": {
@@ -1426,6 +1685,23 @@
           "analysisTimeMs"
         ],
         "title": "ReportMeta",
+        "type": "object"
+      },
+      "ResumeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "description": "Name of the person",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "by"
+        ],
+        "title": "ResumeRequest",
         "type": "object"
       },
       "RiskClass": {
@@ -1486,6 +1762,54 @@
         "title": "RtoAnalysis",
         "type": "object"
       },
+      "RunPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleRun"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextBefore": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pass as `before` for the next page; null on the last page",
+            "title": "Nextbefore"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "RunPage",
+        "type": "object"
+      },
+      "RunState": {
+        "enum": [
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "title": "RunState",
+        "type": "string"
+      },
+      "RunTrigger": {
+        "enum": [
+          "scheduled",
+          "manual"
+        ],
+        "title": "RunTrigger",
+        "type": "string"
+      },
       "SampleFile": {
         "additionalProperties": false,
         "properties": {
@@ -1529,6 +1853,520 @@
           "inventories"
         ],
         "title": "SampleList",
+        "type": "object"
+      },
+      "ScheduleRun": {
+        "additionalProperties": false,
+        "properties": {
+          "analysisId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when the analysis is stored",
+            "title": "Analysisid"
+          },
+          "emailState": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmailState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emailTo": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Emailto",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorcode"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "jobId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jobid"
+          },
+          "riskLevel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "riskScore": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Riskscore"
+          },
+          "rtoFeasible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rtofeasible"
+          },
+          "scheduleId": {
+            "title": "Scheduleid",
+            "type": "string"
+          },
+          "slotAt": {
+            "format": "date-time",
+            "title": "Slotat",
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RunState",
+            "default": "running"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/RunTrigger"
+          }
+        },
+        "required": [
+          "id",
+          "scheduleId",
+          "slotAt",
+          "trigger",
+          "startedAt"
+        ],
+        "title": "ScheduleRun",
+        "type": "object"
+      },
+      "ScheduleSpec": {
+        "additionalProperties": false,
+        "description": "The fields a user sets when creating or editing a schedule.",
+        "properties": {
+          "cadence": {
+            "discriminator": {
+              "mapping": {
+                "daily": "#/components/schemas/DailyCadence",
+                "hourly": "#/components/schemas/HourlyCadence",
+                "monthly": "#/components/schemas/MonthlyCadence",
+                "weekly": "#/components/schemas/WeeklyCadence"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HourlyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/DailyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyCadence"
+              }
+            ],
+            "title": "Cadence"
+          },
+          "inventoryPath": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inventorypath"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "recipients": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipients"
+          },
+          "runbookPath": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Runbookpath",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "runbookPath",
+          "cadence"
+        ],
+        "title": "ScheduleSpec",
+        "type": "object"
+      },
+      "ScheduleView": {
+        "additionalProperties": false,
+        "properties": {
+          "cadence": {
+            "discriminator": {
+              "mapping": {
+                "daily": "#/components/schemas/DailyCadence",
+                "hourly": "#/components/schemas/HourlyCadence",
+                "monthly": "#/components/schemas/MonthlyCadence",
+                "weekly": "#/components/schemas/WeeklyCadence"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HourlyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/DailyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyCadence"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyCadence"
+              }
+            ],
+            "title": "Cadence"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "title": "Createdat",
+            "type": "string"
+          },
+          "createdBy": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Createdby",
+            "type": "string"
+          },
+          "description": {
+            "description": "Cadence in words, e.g. 'Daily 06:00 Europe/Berlin'",
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "inventoryPath": {
+            "anyOf": [
+              {
+                "maxLength": 512,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inventorypath"
+          },
+          "lastRun": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastRunAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastrunat"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "nextRunAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextrunat"
+          },
+          "pauseUntil": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pauseuntil"
+          },
+          "pausedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pausedat"
+          },
+          "pausedBy": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pausedby"
+          },
+          "recipients": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipients"
+          },
+          "runbookPath": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Runbookpath",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "runbookPath",
+          "cadence",
+          "id",
+          "createdBy",
+          "createdAt",
+          "updatedAt",
+          "description"
+        ],
+        "title": "ScheduleView",
+        "type": "object"
+      },
+      "SchedulerView": {
+        "additionalProperties": false,
+        "description": "The global pause state plus the limits a client needs; never SMTP details.",
+        "properties": {
+          "allowedDomains": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alloweddomains",
+            "type": "array"
+          },
+          "defaultRecipient": {
+            "description": "NOTIFY_DEFAULT_EMAIL is set",
+            "title": "Defaultrecipient",
+            "type": "boolean"
+          },
+          "defaultTimezone": {
+            "title": "Defaulttimezone",
+            "type": "string"
+          },
+          "emailTransport": {
+            "description": "`smtp` sends mail; `log` only logs it",
+            "title": "Emailtransport",
+            "type": "string"
+          },
+          "maxPauseDays": {
+            "title": "Maxpausedays",
+            "type": "integer"
+          },
+          "maxSchedules": {
+            "title": "Maxschedules",
+            "type": "integer"
+          },
+          "pauseUntil": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pauseuntil"
+          },
+          "paused": {
+            "default": false,
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "pausedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pausedat"
+          },
+          "pausedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pausedby"
+          },
+          "tickSeconds": {
+            "title": "Tickseconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "tickSeconds",
+          "maxSchedules",
+          "maxPauseDays",
+          "defaultTimezone",
+          "emailTransport",
+          "defaultRecipient",
+          "allowedDomains"
+        ],
+        "title": "SchedulerView",
         "type": "object"
       },
       "ServiceHistory": {
@@ -2213,6 +3051,52 @@
         "title": "ToolView",
         "type": "object"
       },
+      "UploadRunbookRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fileName": {
+            "examples": [
+              "my-runbook.md"
+            ],
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "markdown": {
+            "description": "The runbook's Markdown text",
+            "minLength": 1,
+            "title": "Markdown",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fileName",
+          "markdown"
+        ],
+        "title": "UploadRunbookRequest",
+        "type": "object"
+      },
+      "UploadedRunbook": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "description": "Relative to API_ALLOWED_DIR, e.g. uploads/my-runbook.md",
+            "title": "Path",
+            "type": "string"
+          },
+          "serviceName": {
+            "title": "Servicename",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "serviceName"
+        ],
+        "title": "UploadedRunbook",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2251,6 +3135,42 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WeeklyCadence": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "weekly",
+            "default": "weekly",
+            "title": "Kind",
+            "type": "string"
+          },
+          "time": {
+            "description": "Local time HH:MM",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Time",
+            "type": "string"
+          },
+          "weekday": {
+            "enum": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
+            ],
+            "title": "Weekday",
+            "type": "string"
+          }
+        },
+        "required": [
+          "weekday",
+          "time"
+        ],
+        "title": "WeeklyCadence",
         "type": "object"
       }
     }
@@ -2703,6 +3623,25 @@
               "pattern": "^[A-Za-z0-9_-]{1,64}$",
               "title": "Analysis Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Reader's IANA timezone for displayed times; UTC if omitted",
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reader's IANA timezone for displayed times; UTC if omitted",
+              "title": "Tz"
             }
           }
         ],
@@ -3207,6 +4146,25 @@
               "title": "Job Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Reader's IANA timezone for displayed times; UTC if omitted",
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reader's IANA timezone for displayed times; UTC if omitted",
+              "title": "Tz"
+            }
           }
         ],
         "responses": {
@@ -3342,6 +4300,102 @@
           }
         },
         "summary": "Get Sample",
+        "tags": [
+          "samples"
+        ]
+      }
+    },
+    "/api/v1/dr/samples/runbooks": {
+      "post": {
+        "description": "Save a runbook (JSON `{fileName, markdown}` or multipart `file`) for analyses and schedules.\n\nIt must parse as a runbook (`422 PARSE_ERROR` otherwise) and is never overwritten:\na taken name gets `-2`, `-3`, ... `403 UPLOADS_DISABLED` with `RUNBOOK_UPLOADS_ENABLED=false`.",
+        "operationId": "upload_runbook_api_v1_dr_samples_runbooks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRunbookRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedRunbook"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Upload Runbook",
         "tags": [
           "samples"
         ]
@@ -4242,6 +5296,1308 @@
         "summary": "Health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/v1/schedule-runs/{run_id}": {
+      "get": {
+        "description": "One run; execute it with `POST /executions {analysisJobId: analysisId}`.",
+        "operationId": "get_run_api_v1_schedule_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Run",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedule-runs/{run_id}/cancel": {
+      "post": {
+        "description": "Stops a running run and its analysis; no email is sent. `409` if it is not running.",
+        "operationId": "cancel_run_api_v1_schedule_runs__run_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Cancel Run",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/scheduler": {
+      "get": {
+        "description": "Whether everything is paused, and the limits the dashboard needs.",
+        "operationId": "scheduler_state_api_v1_scheduler_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Scheduler State",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/scheduler/pause": {
+      "post": {
+        "description": "No schedule starts a run until resumed (or until `until`); running runs finish.",
+        "operationId": "pause_all_api_v1_scheduler_pause_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Pause All",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/scheduler/recipient-preview": {
+      "get": {
+        "description": "Who a run of this runbook would email now (reads the runbook's owner).",
+        "operationId": "recipient_preview_api_v1_scheduler_recipient_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "runbookPath",
+            "required": true,
+            "schema": {
+              "maxLength": 512,
+              "minLength": 1,
+              "title": "Runbookpath",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipients",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 5,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recipients"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Recipient Preview",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/scheduler/resume": {
+      "post": {
+        "description": "Every active schedule continues from its next slot after now.",
+        "operationId": "resume_all_api_v1_scheduler_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Resume All",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules": {
+      "get": {
+        "description": "All schedules, oldest first, each with its latest run.",
+        "operationId": "list_schedules_api_v1_schedules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleView"
+                  },
+                  "title": "Response List Schedules Api V1 Schedules Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "List Schedules",
+        "tags": [
+          "schedules"
+        ]
+      },
+      "post": {
+        "description": "Paths are relative to `API_ALLOWED_DIR` and checked now and on every run.",
+        "operationId": "create_schedule_api_v1_schedules_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Schedule",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules/{schedule_id}": {
+      "delete": {
+        "description": "Cancels a running run first; the analyses stay in the history.",
+        "operationId": "delete_schedule_api_v1_schedules__schedule_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Delete Schedule",
+        "tags": [
+          "schedules"
+        ]
+      },
+      "get": {
+        "operationId": "get_schedule_api_v1_schedules__schedule_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Schedule",
+        "tags": [
+          "schedules"
+        ]
+      },
+      "put": {
+        "description": "Replaces the settings; a paused schedule stays paused.",
+        "operationId": "update_schedule_api_v1_schedules__schedule_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleSpec"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Update Schedule",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules/{schedule_id}/pause": {
+      "post": {
+        "description": "`until` resumes it automatically (at most `SCHEDULER_MAX_PAUSE_DAYS` ahead).",
+        "operationId": "pause_schedule_api_v1_schedules__schedule_id__pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Pause Schedule",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules/{schedule_id}/resume": {
+      "post": {
+        "description": "Continues from the next slot after now; missed slots are skipped.",
+        "operationId": "resume_schedule_api_v1_schedules__schedule_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Resume Schedule",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules/{schedule_id}/run-now": {
+      "post": {
+        "description": "Starts a run now (also while paused); `409` while a run of it is still going.",
+        "operationId": "run_now_api_v1_schedules__schedule_id__run_now_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Run Now",
+        "tags": [
+          "schedules"
+        ]
+      }
+    },
+    "/api/v1/schedules/{schedule_id}/runs": {
+      "get": {
+        "description": "Runs of a schedule, newest first.",
+        "operationId": "list_runs_api_v1_schedules__schedule_id__runs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "schedule_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "title": "Schedule Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "`nextBefore` of the last page",
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`nextBefore` of the last page",
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "List Runs",
+        "tags": [
+          "schedules"
         ]
       }
     },

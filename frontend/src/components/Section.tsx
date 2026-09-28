@@ -13,6 +13,8 @@ const ICONS: Record<string, IconName> = {
   "Execute this runbook": "play",
   "Stored analyses": "history",
   "Executions of this analysis": "list",
+  Schedules: "clock",
+  "New schedule": "clock",
 };
 
 /** A titled card; the heading labels the region, and the id is a jump target from the verdict. */

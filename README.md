@@ -20,6 +20,8 @@ DR runbooks are written by hand, rarely validated, never cross-checked against l
 - **Report** as JSON, colored terminal output (Rich) or HTML (Jinja2, autoescaped), from a CLI (`dr-agent`), a REST API (FastAPI) or a React dashboard (risk gauge, RTO waterfall, dependency table, filterable gaps, JSON/HTML export).
 - **Keep history**: every finished analysis is stored with its runbook text, inventory and how it was produced, linked to the executions created from it. Past reports can be listed, reopened, exported and executed again after a restart (dashboard History tab, `dr-agent history`, `/api/v1/analyses`). See [Analysis history](#analysis-history).
 - **Learn from past runs**: new analyses use what earlier analyses and live runs of the same service measured (step outcomes and times, end-to-end time against the RTO, dependencies that kept failing). This adds HISTORICAL gaps and a "Historical insights" section, and shows "previous live runs" on each execution step. Only numbers computed by code reach the model. See [Knowledge base](#knowledge-base).
+- **Schedule** (opt-in): analyses of a runbook, uploaded or from the sample folder, run hourly, daily, weekly or monthly in the creator's timezone, and each run emails a facts-only summary to the runbook owner (found in a contact directory). The scheduler never executes; a person starts an execution from a scheduled run's report. Pause, pause until a date, pause all and cancel are built in. See [Scheduled analysis](#scheduled-analysis).
+- **Times**: stored and exchanged in UTC, shown everywhere in the reader's local time in one format, e.g. `28 Sep 2026, 11:30 UTC+05:30` (dashboard: the browser's zone; CLI: the machine's, or `DISPLAY_TIMEZONE`; HTML export: the downloading browser's; emails: the schedule's).
 - **Execute** (opt-in, after an analysis): from under the finished report, the API or `dr-agent execute`, carry out the analyzed runbook's execution plan whose [MCP](https://modelcontextprotocol.io/) tool calls run only after named people approve them. Calls come from `Tool:` annotations or are AI-proposed and reviewed. Runs include verification, rollback, abort, a tamper-evident audit log and restart recovery, against a bundled mock MCP server that simulates a DR environment. See [Runbook execution](#runbook-execution).
 
 ## Stack
@@ -80,6 +82,21 @@ The execution side (Phases 9-11) sits beside the analysis pipeline and follows t
              hash-chained audit events, one transaction
 ```
 
+Scheduled analysis (Phases 15-17) runs inside the API process when `SCHEDULER_ENABLED=true`. `scheduling_runtime.py` builds it; every tick it claims due slots in one database transaction, re-reads the runbook, analyzes it as a normal job (`source=scheduled`) and emails a facts-only summary. It never executes: a person opens the run's report and starts an execution there, through the same approval-gated flow.
+
+```
+ ticker (SCHEDULER_TICK_SECONDS) --> ScheduleStore.claim_due() (SQLite, one run per slot)
+                |
+                v
+ runbook + inventory (API_ALLOWED_DIR, re-read) --> JobStore --> analyze_runbook() --> history
+                |                                                   (source=scheduled)
+                v
+ RunEmailer: owner -> ContactDirectory -> address (allowed domains) --> Notifier (SMTP | log)
+                |                         email = code-computed facts + link, no runbook/LLM text
+                v
+ Schedules tab: run's report --> "Execute this runbook..." --> POST /executions (person, approvals)
+```
+
 ### Deployment (Docker Compose)
 
 ```
@@ -100,6 +117,10 @@ The execution side (Phases 9-11) sits beside the analysis pipeline and follows t
                                             | mock-mcp (same image, MCP |  streamable HTTP :8765,
                                             | server, simulated DR env) |  Host must be mock-mcp:*
                                             +---------------------------+
+ api -- SMTP :1025, internal network "mail" --> +----------------------------+
+ browser -- http://localhost:8025 -------------> | mailpit (scheduled-run     |  PoC inbox only
+                                                 | emails, web inbox)         |
+                                                 +----------------------------+
                                                     | api -> HTTPS + LLM_API_KEY (bearer)
                                       +-------------v--------------+
                                       |  hosted OpenAI-compatible  |  e.g. api.mistral.ai/v1,
@@ -107,7 +128,7 @@ The execution side (Phases 9-11) sits beside the analysis pipeline and follows t
                                       +----------------------------+
 ```
 
-No model runs inside compose. The `api` container refuses to start without `LLM_API_KEY` (unless `LLM_PROVIDER=none`), and `ui` starts once `api` is healthy. Both published ports are bound to `127.0.0.1` only. `mock-mcp` has no published port and sits on an internal-only network with `api`; execution stays off unless `EXECUTION_ENABLED=true`.
+No model runs inside compose. The `api` container refuses to start without `LLM_API_KEY` (unless `LLM_PROVIDER=none`), and `ui` starts once `api` is healthy. Both published ports are bound to `127.0.0.1` only. `mock-mcp` has no published port and sits on an internal-only network with `api`; execution stays off unless `EXECUTION_ENABLED=true`. `mailpit` receives the scheduled-run emails over the internal `mail` network and publishes only its web inbox on `127.0.0.1:8025`; the scheduler stays off unless `SCHEDULER_ENABLED=true`.
 
 ## Repository layout
 
@@ -143,15 +164,19 @@ docker-compose.yml          api, ui, mock-mcp (hardened: read-only, no capabilit
 docker/                     api.Dockerfile, ui.Dockerfile (multi-stage), nginx.conf (proxy + CSP),
                              mcp-servers.json (the mock-mcp service, used inside the api image)
 backend/src/dr_agent/
-  config.py                 validated settings (fail fast)
+  config.py                 validated settings (fail fast); `config_extras.py`: email, display
+                             timezone and upload settings it inherits
+  runbook_uploads.py        saved runbook uploads: checked, sanitized names, never overwritten
   service.py                parse_markdown() / analyze_runbook() / validate_inventory(): the one
                              pipeline the CLI and API share (framework-free)
   loaders.py                files, uploads and JSON -> validated models or typed errors
   wiring.py                 composition root: settings -> LLMProvider + HealthChecker
   execution_runtime.py      composition root for execution: policy, MCP servers, store, recovery
+  scheduling_runtime.py     composition root for scheduled analysis: store, notifier, directory
   cli.py, cli_output.py     Typer CLI (`dr-agent`); `cli_common.py` startup and error exits
   cli_analysis.py           run + store an analysis, or load a stored one (analyze, execute)
   cli_history.py            `dr-agent history list|show|delete`
+  cli_schedule.py           `dr-agent schedule list|runs` (read-only)
   cli_execute*.py           `dr-agent execute`: session loop and per-step prompts
   models/                   runbook, inventory, report, insights (Pydantic v2)
   storage/                  the shared SQLite file: connection helper, numbered migrations
@@ -159,7 +184,12 @@ backend/src/dr_agent/
                              events, facts, HISTORICAL rules, prompt allow-list, SQLite source
   history/                  stored analyses (framework-free): records, `AnalysisStore` protocol,
                              SQLite store, service (saving, retention, staleness)
-  utils/                    errors, structlog logging, timing
+  scheduling/               scheduled analysis (framework-free): presets and next slot (DST-safe),
+                             `ScheduleStore` + SQLite, runner (analyze + email, never executes),
+                             pause / pause until / pause all / cancel
+  notify/                   email: contact directory, recipient rules, facts-only message, SMTP/log
+  utils/                    errors, structlog logging, timing, `timefmt.py` (the one display format
+                             for times: `28 Sep 2026, 11:30 UTC+05:30`)
   core/                     markdown parser (incl. tool-call annotations); RTO/execution-plan/gap
                              rules, shared dependency graph, and the LLM+rules analyzer, `run_analysis()`
   health/                   health checkers (mock, live) + dependency cross-match
@@ -174,7 +204,9 @@ backend/src/dr_agent/
                              execution routes (`routes_execution.py`, `routes_steps.py`), schemas and
                              the background advancing service (`execution_service.py`); history
                              routes (`routes_history.py`) and the memory-then-history lookup
-                             (`analysis_lookup.py`)
+                             (`analysis_lookup.py`); schedule routes (`routes_schedules.py`,
+                             `routes_scheduler.py`, `schemas_schedules.py`) and the scheduler's
+                             `JobStore`-backed analyze callable (`scheduled_jobs.py`)
   execution/                runbook execution (Phases 9-10, framework-free):
                              models, state machines, policy, approvals, hash-chained audit,
                              planner, engine, SQLite store with restart recovery, and AI
@@ -186,19 +218,24 @@ backend/src/dr_agent/
                              environment, scenario file for faults (`python -m dr_agent.mock_mcp`)
 backend/tests/
   conftest.py               every test gets its own database file (`DB_PATH` in `tmp_path`)
-  unit/                     unit tests (`exec_support.py`, `history_support.py`: shared helpers)
+  unit/                     unit tests (`exec_support.py`, `history_support.py`,
+                             `scheduling_support.py`: shared helpers)
   integration/              API (TestClient) and CLI (CliRunner + one subprocess) tests; execution
-                             against the mock MCP server (in-memory and stdio subprocess)
+                             against the mock MCP server (in-memory and stdio subprocess); schedule
+                             API tests (`schedule_api_support.py`, one real SMTP exchange)
   fixtures/                 parser edge-case fixtures; golden formatter snapshots (Phase 4)
 frontend/                   React dashboard (Vite, React 18, TypeScript, Tailwind, Recharts)
   openapi.json              committed API schema (regenerate with `uv run poe gen-api`)
   src/api/                  generated types (`schema.d.ts`) + the single typed client
   src/hooks/                data fetching: `useAnalysis` (submit + long-poll job), `useSamples`,
                              `useExecution` (actions + polling), `useExecutionCatalog`, `useAudit`,
-                             `useStoredName`, `useHistory`, `useStoredAnalysis`
+                             `useStoredName`, `useHistory`, `useStoredAnalysis`, `useSchedules`,
+                             `useScheduleRuns`; `src/lib/labels.ts` `formatDateTime()` shows every time
   src/components/           Analyze view, input panel, report sections, charts; `history/`: stored
                              analyses list and detail; `execution/`: step cards, call view and
-                             editor, header, audit panel
+                             editor, header, audit panel; `schedules/`: schedule list, form (runbook
+                             picker with upload, monthly cadence, browser timezone), pause
+                             controls, runs and a run's report with execution
                              (each < 150 lines, with tests)
 mock-data/
   runbooks/                 mock runbooks: estimate-service, payment-gateway, auth-service (Phase 2),
@@ -209,6 +246,8 @@ mock-data/
   expected-reports/         golden reports for estimate-service: without history (Phase 4) and with
                              the history fixture in backend/tests/fixtures/history (Phase 14)
   scenarios/                mock MCP server scenarios for drills: smoke-fails-once, slow-promotion
+  contacts.json             PoC contact directory: runbook owner name -> example.com address
+  uploads/                  saved runbook uploads (created on the first upload; git- and docker-ignored)
 ```
 
 ## Prerequisites
@@ -286,10 +325,12 @@ LLM_BASE_URL=https://api.openai.com/v1 LLM_MODEL=gpt-4o-mini docker compose up -
 LLM_PROVIDER=none docker compose up --build                                            # rule-based only, no key
 EXECUTION_ENABLED=true EXECUTION_ALLOW_LIVE=true docker compose up --build             # + runbook execution
 MOCK_MCP_SCENARIO=/app/mock-data/scenarios/smoke-fails-once.json EXECUTION_ENABLED=true ...  # drill a failure
+SCHEDULER_ENABLED=true docker compose up --build                                      # + scheduled analysis; emails at http://localhost:8025
+RUNBOOK_UPLOADS_ENABLED=false docker compose up --build                               # no runbook uploads
 docker compose down                                                                    # stop (add --volumes to delete executions)
 ```
 
-Compose reads `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_RESPONSE_FORMAT`, `LLM_TIMEOUT_SECONDS`, `LOG_LEVEL`, `HEALTH_CHECK_CHAOS`, `EXECUTION_ENABLED`, `EXECUTION_ALLOW_LIVE`, `EXECUTION_AI_PROPOSALS` `HISTORY_ENABLED`, `HISTORY_RETENTION_DAYS`, `KNOWLEDGE_ENABLED`, `KNOWLEDGE_IN_PROMPT` and `MOCK_MCP_SCENARIO` from your shell or the `.env` file. Stored analyses (with their runbook text) and executions are kept in the `dr-agent-data` volume. The UI image is built with an empty `VITE_API_BASE_URL`, so the browser calls `/api/...` on its own origin and nginx forwards it to the API (no CORS involved).
+Compose reads `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_RESPONSE_FORMAT`, `LLM_TIMEOUT_SECONDS`, `LOG_LEVEL`, `HEALTH_CHECK_CHAOS`, `EXECUTION_ENABLED`, `EXECUTION_ALLOW_LIVE`, `EXECUTION_AI_PROPOSALS` `HISTORY_ENABLED`, `HISTORY_RETENTION_DAYS`, `KNOWLEDGE_ENABLED`, `KNOWLEDGE_IN_PROMPT`, `SCHEDULER_ENABLED`, `SCHEDULER_DEFAULT_TIMEZONE`, `NOTIFY_TRANSPORT`, `NOTIFY_FROM`, `NOTIFY_DEFAULT_EMAIL`, `NOTIFY_ALLOWED_DOMAINS` and `MOCK_MCP_SCENARIO` from your shell or the `.env` file. Scheduled-run emails go to the bundled Mailpit inbox (SMTP only on the internal `mail` network, web inbox at http://localhost:8025). Stored analyses (with their runbook text) and executions are kept in the `dr-agent-data` volume, and uploaded runbooks in the `dr-agent-uploads` volume (mounted at `/app/mock-data/uploads`, the only writable folder in the read-only image). The UI image is built with an empty `VITE_API_BASE_URL`, so the browser calls `/api/...` on its own origin and nginx forwards it to the API (no CORS involved).
 
 ## Demo walkthrough
 
@@ -336,6 +377,8 @@ The header shows whether the API is reachable and what execution allows on this 
 5. **Execute this runbook…** under the report opens an execution section below it, for the runbook that was just analyzed (there is no separate tab: execution always follows an analysis). It warns when the analysis rated the runbook HIGH or CRITICAL, and lists the runs of this analysis. There you create a dry run (every call is checked and approved, but only simulated: nothing reaches a tool) or a live run (the approved calls really run against the MCP servers). A mode's button is disabled once a run of that mode has completed for this analysis; a failed or aborted run leaves it enabled. While a request is pending (creating a run, approving, starting), the buttons are disabled and a progress note says what the server is doing, with the elapsed time; creating a run can take minutes when the AI proposes calls for steps without a `Tool:` annotation (about 10 minutes for the 6 unannotated order-service steps with a 3B model on CPU; `EXECUTION_AI_PROPOSALS=false` makes such steps manual at once). Step buttons, including **Mark done** and **Skip** on manual steps, work as soon as the run is created, before **Start run**; they need a name in "Your name", and the panel says so when it is empty. Creating a new run clears the run shown below the buttons (for example a finished live run) and shows the new one when it is ready; earlier runs stay in **Runs of this analysis** and in the History tab. While the server is calling tools in the background, a "Run in progress" note is shown and the page updates by itself. **Create live run** also needs `EXECUTION_ALLOW_LIVE=true` on the server ("Live runs are off on this server" otherwise). Below the steps, **Start run** is enabled once every step is approved (manual and skipped steps need none), and **Abort run** once the run has started. Otherwise you approve, reject, edit or skip each step's call, confirm outcomes, retry, roll back, pause, resume, close or abort, and verify the audit log. Every call is shown exactly as it would run (server, tool, arguments, risk, origin, approvals so far). Approvals are recorded under the name you type, which the page remembers in this browser only; identities are not verified, and the page says so. When execution is off on the server, the section explains how an operator turns it on. A new analysis starts a new section.
 6. The page says whether the report was **saved to history**. The **History** tab lists stored analyses (newest first, filter by exact service name or risk level, load more). Opening one shows its report, a **Download runbook** link, the HTML export and **Executions of this analysis**: a read-only record of its runs. Pick a run to see its steps, calls, approvals and results, and its audit log with the hash chain verified. The History tab never starts or changes a run; to run a runbook again, analyze it on the Analyze tab, so the run follows current dependency health. When earlier analyses or live runs of the service exist, every report ends with **Historical insights** (per-step outcomes and measured times, recent runs against the RTO, dependencies that were not up), and each execution step card shows its previous live runs. Analyses older than `HISTORY_STALE_AFTER_HOURS` carry a warning that dependency health may have changed.
 
+7. The **Schedules** tab (needs `SCHEDULER_ENABLED=true` on the server; it says so otherwise) lists schedules with their cadence in words, next run, last result and state. Enter your name, then create a schedule: a runbook from the list or **Upload runbook…** (the server checks that it parses, saves it under `uploads/` without overwriting anything, and selects it; a file that is not a runbook is refused with the reason), an optional inventory, hourly / daily / weekly / monthly (day 1-31, where a day the month lacks runs on its last day, or "Last day of the month"), the browser's timezone shown read-only (not editable), and an optional recipient override; "Email goes to: …" shows who the server would email). Each row offers **Run now**, **Pause…** (optionally until a date), **Resume** and **Delete**; **Pause all…** stops every schedule, with a banner and **Resume all** while paused. Clicking a schedule lists its runs (risk, RTO, email status; **Cancel run** while one is analyzing). **Open report** shows the stored report with **Execute this runbook…** under it: the only way a scheduled run leads to an execution, and the same approval-gated flow as on the Analyze tab. The link in each email (`#/schedules/{id}/runs/{runId}`) opens that report directly. Every time on the dashboard is shown in your browser's timezone, e.g. `30 Sep 2026, 06:00 UTC+05:30`.
+
 The API base URL comes from `VITE_API_BASE_URL` (default `http://127.0.0.1:8000`, see `frontend/.env.example`). If the UI is served from an origin other than `http://localhost:5173`, add that origin to `CORS_ORIGINS`.
 
 ## CLI
@@ -366,6 +409,8 @@ uv run dr-agent version
 | `--no-save` | `analyze` only: do not store this analysis in the history |
 | `--analysis/-a ID` | `execute` only, instead of `--runbook`: execute a stored analysis without analyzing again |
 
+`schedule list` prints one line per schedule (id, name, cadence, next run or pause state, latest run) and says when everything is paused; `schedule runs ID` lists a schedule's runs with the analysis id to pass to `execute --analysis`. Both are read-only: schedules are created and changed in the dashboard or the API, where the scheduler runs. Every CLI command prints times in this machine's timezone in the shared format (`27 Sep 2026, 22:27 UTC+05:30`); set `DISPLAY_TIMEZONE` (an IANA name) to use another zone.
+
 `analyze` stores the analysis in the history and prints `Saved to history as <id>` on stderr (skip with `--no-save` or `HISTORY_ENABLED=false`). `history list` prints one line per analysis (id, time, service, risk, RTO, runs, source), so it can be piped.
 
 `execute` needs `EXECUTION_ENABLED=true` (checked before anything else) and uses the same policy, store and MCP servers as the API. It first runs the readiness analysis and stores it (or loads it with `--analysis ID`, warning when it is older than `HISTORY_STALE_AFTER_HOURS`), prints the risk score, RTO feasibility, gap count and plan, and asks `Execute this runbook now?`; answering no exits with `0` and executes nothing. The execution then follows the report's plan. For every step that needs a person it shows the call in a panel and asks for approver names, or `reject`, `skip`, `manual`, `done`, `ok`/`failed`, `retry`, `rollback`, `close` or `abort`. A refused answer (the same approver twice, the starter approving a destructive call, a missing reason) is shown and asked again. Exit codes: `0` completed, `2` failed or aborted, `1` error.
@@ -383,8 +428,9 @@ Start it with `uv run poe dev-api`. Interactive OpenAPI docs are at `http://127.
 | `POST /api/v1/dr/analyze` | Multipart (`runbook` file + optional `inventory` file) or JSON `{runbookMarkdown, inventory?, runbookName?}`. Returns `202` with a job and a `Location` header |
 | `GET /api/v1/dr/analyze?runbook=&inventory=` | Same, for files on the server, given as paths relative to `API_ALLOWED_DIR` (default `mock-data`); anything that resolves outside it is refused with `403` |
 | `GET /api/v1/dr/jobs/{id}` | Poll a job: `status` is `pending`, `running`, `succeeded` (with `report`) or `failed` (with `error`) |
-| `GET /api/v1/dr/jobs/{id}/report.html` | The finished report as a downloadable HTML file (autoescaped); `409 CONFLICT` while the job is unfinished |
-| `GET /api/v1/dr/samples` | Sample runbooks and inventories under `API_ALLOWED_DIR` (used by the dashboard's sample picker) |
+| `GET /api/v1/dr/jobs/{id}/report.html?tz=` | The finished report as a downloadable HTML file (autoescaped); times in the IANA zone `tz` (the dashboard sends the browser's; UTC without it, `422` for an unknown zone); `409 CONFLICT` while the job is unfinished |
+| `GET /api/v1/dr/samples` | Sample runbooks (including saved uploads, `uploads/…`) and inventories under `API_ALLOWED_DIR` (used by the dashboard's pickers) |
+| `POST /api/v1/dr/samples/runbooks` | Save a runbook: JSON `{fileName, markdown}` or multipart `file`; `201 {path, serviceName}`. It must parse (`422 PARSE_ERROR`), have a `.md` name and be UTF-8 (`400`), within `API_MAX_UPLOAD_BYTES` (`413`); never overwrites (a taken name gets `-2`, `-3`, …); `409` above `RUNBOOK_UPLOAD_MAX_FILES`, `403 UPLOADS_DISABLED` when off |
 | `GET /api/v1/dr/samples/file?path=` | One sample's text, restricted to the same allow-list as `GET /api/v1/dr/analyze` |
 | `GET /api/v1/health` | `{status: "ok", version, uptime}` |
 
@@ -395,7 +441,7 @@ Analysis history (`403 HISTORY_DISABLED` while `HISTORY_ENABLED=false`):
 | `GET /api/v1/analyses?service=&riskLevel=&limit=&before=` | Stored analyses, newest first: `{items, nextBefore}`; pass `nextBefore` as `before` for the next page (`limit` 1-100, default 20) |
 | `GET /api/v1/analyses/{id}` | `{summary, report, provenance, stale}`; provenance is the LLM provider, model, prompt and agent version (never credentials) |
 | `GET /api/v1/analyses/{id}/runbook` | The runbook Markdown exactly as analyzed, as a `text/plain` download (never rendered) |
-| `GET /api/v1/analyses/{id}/report.html` | The stored report as HTML (same rendering and CSP as the job export) |
+| `GET /api/v1/analyses/{id}/report.html?tz=` | The stored report as HTML (same rendering, CSP and `tz` as the job export) |
 | `GET /api/v1/analyses/{id}/executions` | Executions created from it (readable even while execution is off) |
 | `GET /api/v1/analyses/{id}/executions/{executionId}` | One of them, read-only: `{execution, audit}` with the audit chain verified (also while execution is off); `404` for a run of another analysis |
 | `DELETE /api/v1/analyses/{id}` | `204`; `409 CONFLICT` while executions refer to it |
@@ -416,6 +462,21 @@ Runbook execution (`403 EXECUTION_DISABLED` unless `EXECUTION_ENABLED=true`, exc
 | `GET /api/v1/executions/{id}/audit?verify=true` | Audit events plus hash-chain verification |
 
 Mutating execution endpoints return the updated execution; tool calls then run in the background, and clients poll `GET /executions/{id}`. `rollback` runs the approved rollback call within the request. Errors add `403 EXECUTION_DISABLED`, `409 INVALID_TRANSITION` / `STALE_CALL`, `422 POLICY_VIOLATION` and `502 TOOL_ERROR`.
+
+Scheduled analysis (all `403 SCHEDULER_DISABLED` unless `SCHEDULER_ENABLED=true`):
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/v1/schedules`, `POST /api/v1/schedules` | List (each with its latest run) and create `{name, runbookPath, inventoryPath?, cadence, timezone?, recipients?, createdBy}`; paths are relative to `API_ALLOWED_DIR` |
+| `GET\|PUT\|DELETE /api/v1/schedules/{id}` | Read, replace the settings (a paused schedule stays paused), delete (cancels a running run; the analyses stay) |
+| `POST /api/v1/schedules/{id}/pause`, `/resume` | `{by, until?}` / `{by}`; `until` resumes by itself, at most `SCHEDULER_MAX_PAUSE_DAYS` ahead; resuming skips missed slots |
+| `POST /api/v1/schedules/{id}/run-now` | `202` with the run; `409` while a run of it is going |
+| `GET /api/v1/schedules/{id}/runs?limit&before` | Runs, newest first |
+| `GET /api/v1/schedule-runs/{runId}`, `POST .../cancel` | One run (with `analysisId` once stored), or cancel it (no email) |
+| `GET /api/v1/scheduler`, `POST /api/v1/scheduler/pause`, `/resume` | Global pause state and limits; pause or resume every schedule |
+| `GET /api/v1/scheduler/recipient-preview?runbookPath&recipients` | Who a run of that runbook would email |
+
+A scheduled run is executed with the existing `POST /api/v1/executions {analysisJobId: <run's analysisId>}`.
 
 Analysis is job-based because a local model on CPU takes minutes. Add `?wait=true` to either analyze endpoint (or to the job endpoint) to wait up to `API_WAIT_TIMEOUT_SECONDS`: if the job finishes in time you get the report itself with `200`, otherwise the usual `202` job.
 
@@ -451,6 +512,17 @@ Steps are matched across runbook versions by their normalized action text and ta
 3. **The prompt**: a `<history>` block with an allow-list of numbers, enum values, timestamps, step numbers and names that already come from the runbook or inventory. Step summaries, tool results, reasons, rationales and earlier report text never reach the model. `KNOWLEDGE_IN_PROMPT=false` keeps even these out.
 
 During execution, each step card (and each `dr-agent execute` step panel) shows "Previous live runs: n, failed n, rolled back n, median n min". This is information only; it never approves, skips or changes a call. `GET /api/v1/services/{name}/history` returns the raw facts. Reading history never fails an analysis: on a storage error the analysis continues without it. The mock environment's timings are simulated, so in the PoC the durations demonstrate the mechanism, not real recovery times.
+
+## Scheduled analysis
+
+Design [`docs/design/scheduled-analysis.md`](docs/design/scheduled-analysis.md), ADRs [0010](docs/adr/0010-in-process-scheduler.md) and [0011](docs/adr/0011-recipients-and-email-content.md). Off by default; `SCHEDULER_ENABLED=true` needs the history on.
+
+- **When.** Presets only: hourly at a minute, daily at a time, weekly on a day at a time, or monthly on day 1-31 (a day the month lacks runs on its last day, so day 31 runs on 30 April and 28/29 February) or on the last day, in the IANA timezone of the browser that created the schedule (DST-safe: a skipped local time runs at the first valid minute, a repeated one runs once). The scheduler runs inside the API process and checks every `SCHEDULER_TICK_SECONDS`. Each slot runs once; a slot missed while the server was down runs once at startup, and a slot is skipped while the previous run of that schedule is still going.
+- **Uploaded runbooks.** **Upload runbook…** (or `POST /api/v1/dr/samples/runbooks`) saves a checked runbook under `API_ALLOWED_DIR/uploads` (`RUNBOOK_UPLOAD_DIR`), so schedules, the Analyze tab and `GET /analyze` can use it. Nothing is ever overwritten. In Compose the folder is the `dr-agent-uploads` volume.
+- **What a run does.** It re-reads the runbook and inventory through the same path allow-list as `GET /analyze`, analyzes them as a normal job (sharing the concurrency cap and the knowledge base), stores the analysis with source `scheduled`, and emails a summary. A full job store fails the run with `CAPACITY_EXCEEDED` until the next slot. The scheduler never executes: a person opens the run's report and starts an execution there.
+- **Who gets the email.** The schedule's override if set, otherwise the runbook's `**Owner:**` looked up in the contact directory (`NOTIFY_CONTACTS_FILE`, `mock-data/contacts.json` in the PoC), otherwise `NOTIFY_DEFAULT_EMAIL`. The owner text is only a lookup key, and every address must be in `NOTIFY_ALLOWED_DOMAINS` (at most 5).
+- **What the email says.** Numbers computed by code only (risk, RTO verdict and buffer, gap, SPOF and dependency counts, whether AI analysis ran) and a link to the run; no runbook text and no model text. A failed run gets a short failure email; a cancelled one gets none. Sending never fails the run.
+- **Stopping it.** Pause one schedule (optionally until a date), pause all (optionally until a date), cancel a running run, delete a schedule, or turn it off with `SCHEDULER_ENABLED=false`. At shutdown a running run is recorded as interrupted.
 
 ## Runbook execution
 
@@ -528,6 +600,17 @@ Set through environment variables or a `.env` file (copy `.env.example`). Values
 | `KNOWLEDGE_MAX_RUNS` | `10` | Most recent finished live executions considered (1-100) |
 | `KNOWLEDGE_MAX_ANALYSES` | `20` | Most recent stored analyses considered (1-200) |
 | `KNOWLEDGE_IN_PROMPT` | `true` | Send the allow-listed history facts to the model; `false` still reports them and uses them in rules |
+| `SCHEDULER_ENABLED` | `false` | Scheduled analysis (Phases 15-17); needs `HISTORY_ENABLED=true`. The scheduler only analyzes and emails, it never executes |
+| `SCHEDULER_TICK_SECONDS` / `SCHEDULER_MAX_SCHEDULES` / `SCHEDULER_MAX_PAUSE_DAYS` | `30` / `50` / `90` | How often due schedules are checked, how many may exist, how far ahead "pause until" may reach |
+| `SCHEDULER_DEFAULT_TIMEZONE` | `UTC` | IANA timezone for new schedules |
+| `NOTIFY_TRANSPORT` | `log` | `smtp` sends the summary email; `log` only writes a log line |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` / `SMTP_STARTTLS` / `SMTP_TIMEOUT_SECONDS` | `localhost` / `1025` / - / - / `false` / `10` | Mail relay (Mailpit in Compose); the password is never logged |
+| `NOTIFY_FROM` / `NOTIFY_DEFAULT_EMAIL` | `dr-agent@example.com` / - | Sender, and the recipient when the runbook owner is not in the directory |
+| `NOTIFY_ALLOWED_DOMAINS` | `example.com` | Comma-separated; every recipient must be in one of these domains |
+| `NOTIFY_DIRECTORY` / `NOTIFY_CONTACTS_FILE` | `static` / - | Contact directory: a JSON file of name to email (`mock-data/contacts.json` in the PoC) |
+| `UI_BASE_URL` | - | Dashboard address for the link in emails |
+| `DISPLAY_TIMEZONE` | - | CLI only: show times in this IANA zone instead of the machine's local time |
+| `RUNBOOK_UPLOADS_ENABLED` / `RUNBOOK_UPLOAD_DIR` / `RUNBOOK_UPLOAD_MAX_FILES` | `true` / `uploads` / `200` | Saved runbook uploads: on or off, the folder inside `API_ALLOWED_DIR`, and the most files it may hold |
 | `HISTORY_STALE_AFTER_HOURS` | `24` | Stored analyses older than this get a "health may have changed" warning before they are executed |
 | `MOCK_MCP_SCENARIO` | (none) | Mock MCP server only: scenario file with the starting state and injected faults |
 
@@ -551,6 +634,8 @@ The providers use plain httpx, not vendor SDKs, so the core stays open source; w
 
 **Persistence.** Jobs live in memory (`api/jobs.py`). A durable store (SQLite, Redis) can replace `JobStore` without touching the service layer. Executions already use a durable store: `ExecutionStore` (`execution/store.py`) with a SQLite implementation. A PostgreSQL store would implement the same five async methods.
 
+**Email and contact lookup.** Scheduled runs email through a `Notifier` (`notify/senders.py`: `SmtpNotifier`, `LogNotifier`) and find the owner's address through a `ContactDirectory` (`notify/directory.py`: `async def email_for(name) -> str | None`). A real mail relay only needs the `SMTP_*` settings; a provider API (SES, SendGrid) is another `Notifier`. For production, implement `ContactDirectory` against LDAP, Entra ID, Okta, PagerDuty or Opsgenie on-call, or a CMDB, and return it from `build_directory()`. The runbook's owner name is only ever a lookup key.
+
 **Tool execution.** The engine reaches external systems only through `ToolExecutor` (`tools/base.py`: `list_tools()` and `call_tool()`). The implementations are `McpToolExecutor` (MCP SDK), the dry-run executor and a scripted fake. A real MCP server (Kubernetes, PostgreSQL, DNS) needs no code change: add it to `MCP_SERVERS_FILE` and allow-list its tools in `EXECUTION_POLICY_FILE`, after a threat review of those tools. Only `tools/mcp_executor.py`, `tools/mcp_convert.py` and `mock_mcp/` import the SDK; a test enforces this.
 
 ## Roadmap
@@ -572,8 +657,12 @@ The providers use plain httpx, not vendor SDKs, so the core stays open source; w
 | 12 | Design for analysis history and a DR knowledge base (design doc + ADRs 0007-0009) | Done (approved 2026-09-25) |
 | 13 | Analysis history: stored reports and runbooks linked to executions, API, CLI, UI | Done |
 | 14 | Knowledge base: measured facts from past runs in reports, prompts and execution | Done |
+| 15 | Design for scheduled readiness analysis with email notification (design doc + ADRs 0010-0011) | Done (approved 2026-09-26) |
+| 16 | Scheduler and notification core: schedules, pause and cancel, recipients, email | Done |
+| 17 | Schedules API, UI tab, CLI, Mailpit in Docker Compose | Done |
+| 18 | Monthly schedules, saved runbook uploads, browser timezone, one date-time format | Done |
 
-Details and exit criteria are in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md). The execution feature is described in [docs/design/runbook-execution.md](docs/design/runbook-execution.md), with decisions in [docs/adr/](docs/adr/README.md).
+Details and exit criteria are in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md). The execution feature is described in [docs/design/runbook-execution.md](docs/design/runbook-execution.md) and scheduled analysis in [docs/design/scheduled-analysis.md](docs/design/scheduled-analysis.md), with decisions in [docs/adr/](docs/adr/README.md).
 
 ## Security notes
 
@@ -588,7 +677,9 @@ Details and exit criteria are in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATI
 - **Execution API and UI.** All execution checks run on the server, so calling the API directly bypasses nothing: the UI has no authority. Tool results, AI rationales and audit payloads are rendered as text, never as HTML. The mock server's HTTP transport only accepts its own Host name (DNS-rebinding protection) and runs on an internal network with no published port.
 - **History in prompts.** Past runs reach the model only as the allow-listed facts of `knowledge/prompt_facts.py` (numbers, enum values, timestamps, step numbers, runbook and inventory names), escaped inside `<history>` like the other blocks. Step summaries, tool results, reasons, rationales and earlier report text are never sent, so a runbook or tool that once carried an injection attempt cannot reach later analyses through the history. A test enforces the allow-list.
 - **Stored runbooks.** The history keeps each runbook's full text and inventory (ADR 0008), which may include hostnames, IP addresses and internal procedures. The database file is gitignored, excluded from Docker build contexts and kept on the `dr-agent-data` volume, but it is not encrypted: use disk encryption, set `HISTORY_RETENTION_DAYS`, or turn the history off with `HISTORY_ENABLED=false`. Anyone who can reach the API can read every stored runbook. Stored Markdown is only served as a `text/plain` download and shown as text, and runbook text is still never logged.
-- **Known limits (PoC).** There is no authentication or rate limiting, only a job concurrency cap. Anyone who can reach the API can read stored analyses and runbooks, start executions and approve calls under any name, so keep execution off, or the API on localhost or behind an authenticating proxy. `HEALTH_CHECKER=live` is an SSRF surface (see above). Put the API behind an authenticating proxy before exposing it beyond localhost.
+- **Scheduled analysis and email.** The scheduler only analyzes and emails; it never executes (`scheduling/` does not import `execution/`, test-enforced). Emails carry numbers computed by code and a link only: no runbook text and no model text, so an injected runbook cannot put its words into a mail sent by the organisation. The runbook's owner line is only a lookup key for the contact directory, never an address, and every recipient must be in `NOTIFY_ALLOWED_DOMAINS` (at most 5), so the API is not an open mail relay. `EmailMessage` rejects header injection and the subject is sanitized. `SMTP_PASSWORD` is a `SecretStr` and never returned by the API. Schedule paths go through the same allow-list on save and on every run. See `docs/SECURITY_GUARDRAILS.md` section 7.
+- **Runbook uploads.** Uploading is the only feature that writes user content to disk. Files go only to one folder inside `API_ALLOWED_DIR` (a plain folder name, checked to resolve inside it), must be `.md` UTF-8 text within `API_MAX_UPLOAD_BYTES` that parses as a runbook, get a sanitized `[a-z0-9-]` name, never overwrite anything (exclusive create plus a temporary file), and are capped at `RUNBOOK_UPLOAD_MAX_FILES`. Their text is untrusted like any runbook, never logged, and served only as text. Turn uploads off with `RUNBOOK_UPLOADS_ENABLED=false`.
+- **Known limits (PoC).** There is no authentication or rate limiting, only a job concurrency cap. Anyone who can reach the API can read stored analyses and runbooks, create, pause or delete schedules, upload runbooks, start executions and approve calls under any name, so keep execution off, or the API on localhost or behind an authenticating proxy. `HEALTH_CHECKER=live` is an SSRF surface (see above). Put the API behind an authenticating proxy before exposing it beyond localhost.
 
 ## License
 

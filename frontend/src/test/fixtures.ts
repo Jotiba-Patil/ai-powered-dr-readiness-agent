@@ -3,6 +3,7 @@ import type { Api } from "../api/client";
 import type { JobView, Report } from "../api/types";
 import { executionApiStubs } from "./executionFixtures";
 import { historyApiStubs } from "./historyFixtures";
+import { scheduleApiStubs } from "./scheduleFixtures";
 
 export function makeReport(overrides: Partial<Report> = {}): Report {
   return {
@@ -94,8 +95,13 @@ export function makeApi(overrides: Partial<Api> = {}): Api {
       path.endsWith(".json") ? '{"services": []}' : "# Auth Service\n",
     ),
     reportHtmlUrl: (jobId: string) => `http://api.test/api/v1/dr/jobs/${jobId}/report.html`,
+    uploadRunbook: vi.fn(async (fileName: string) => ({
+      path: `uploads/${fileName.replace(/\.md$/, "")}.md`,
+      serviceName: "Uploaded Service",
+    })),
     ...executionApiStubs(),
     ...historyApiStubs(),
+    ...scheduleApiStubs(),
     ...overrides,
   };
 }

@@ -13,6 +13,7 @@ from dr_agent.cli_output import ReportFormat, render_report, write_output
 from dr_agent.config import Settings
 from dr_agent.history.models import MAX_PAGE, AnalysisQuery, AnalysisRecord, AnalysisSummary
 from dr_agent.utils.errors import AppError
+from dr_agent.utils.timefmt import display_time
 
 history_app = typer.Typer(help="Stored analyses: list, show and delete.", no_args_is_help=True)
 
@@ -35,7 +36,8 @@ def list_analyses(
     for item in items:
         rto = "RTO feasible" if item.rto_feasible else "RTO NOT feasible"
         typer.echo(
-            f"{item.id}  {item.completed_at:%Y-%m-%d %H:%M} UTC  {item.service_name}  "
+            f"{item.id}  {display_time(item.completed_at, settings.display_zone)}  "
+            f"{item.service_name}  "
             f"risk {item.risk_score} {item.risk_level.value}  {rto}  "
             f"runs {item.execution_count}  {item.source.value}"
         )

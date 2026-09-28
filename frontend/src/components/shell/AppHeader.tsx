@@ -1,11 +1,12 @@
 import type { ServerStatus } from "../../hooks/useServerStatus";
 import { Icon, type IconName } from "../ui/Icon";
 
-export type View = "analyze" | "history";
+export type View = "analyze" | "history" | "schedules";
 
 const TABS: { view: View; label: string; icon: IconName; hint: string }[] = [
   { view: "analyze", label: "Analyze", icon: "pulse", hint: "Check a runbook and run it" },
   { view: "history", label: "History", icon: "history", hint: "Past reports and runs" },
+  { view: "schedules", label: "Schedules", icon: "clock", hint: "Scheduled analyses and emails" },
 ];
 
 function Chip({ tone, children }: { tone: "ok" | "warn" | "off" | "wait"; children: string }) {
@@ -42,7 +43,7 @@ function executionChip(status: ServerStatus) {
   );
 }
 
-/** Command bar: product mark, the two views, and what this server allows right now. */
+/** Command bar: product mark, the views, and what this server allows right now. */
 export function AppHeader({
   view,
   onView,

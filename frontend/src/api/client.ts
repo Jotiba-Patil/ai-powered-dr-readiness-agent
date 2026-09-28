@@ -2,9 +2,11 @@
 import createClient from "openapi-fetch";
 import { createExecutionApi } from "./executionClient";
 import { createHistoryApi } from "./historyClient";
+import { createScheduleApi } from "./scheduleClient";
 import { ApiError, call } from "./http";
 import type { paths } from "./schema";
-import type { AnalyzeRequest, HealthResponse, JobView, SampleList } from "./types";
+import { browserTimezone } from "../lib/labels";
+import type { AnalyzeRequest, HealthResponse, JobView, SampleList, UploadedRunbook } from "./types";
 
 export { ApiError } from "./http";
 
@@ -19,6 +21,7 @@ export function createApi(baseUrl: string = DEFAULT_API_BASE_URL, fetchImpl?: ty
     baseUrl: root,
     ...createExecutionApi(root, client),
     ...createHistoryApi(root, client),
+    ...createScheduleApi(root, client),
 
     /** Starts an analysis job (never waits: a local model on CPU takes minutes). */
     async submitAnalysis(body: AnalyzeRequest): Promise<JobView> {
@@ -53,12 +56,26 @@ export function createApi(baseUrl: string = DEFAULT_API_BASE_URL, fetchImpl?: ty
       return data.content;
     },
 
+    /** Saves a runbook in the server's upload folder (never overwrites); returns its path. */
+    uploadRunbook(fileName: string, markdown: string): Promise<UploadedRunbook> {
+      return call(root, () =>
+        client.POST("/api/v1/dr/samples/runbooks", { body: { fileName, markdown } }),
+      );
+    },
+
+    /** HTML export; times in it are shown in this browser's timezone. */
     reportHtmlUrl(jobId: string): string {
-      return `${root}/api/v1/dr/jobs/${encodeURIComponent(jobId)}/report.html`;
+      return `${root}/api/v1/dr/jobs/${encodeURIComponent(jobId)}/report.html${tzQuery()}`;
     },
   };
 }
 
 export type Api = ReturnType<typeof createApi>;
+
+/** `?tz=<browser zone>` for server-rendered HTML, or nothing (the server then uses UTC). */
+export function tzQuery(): string {
+  const zone = browserTimezone();
+  return zone ? `?tz=${encodeURIComponent(zone)}` : "";
+}
 
 export const api = createApi(import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL);

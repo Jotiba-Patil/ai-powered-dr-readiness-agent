@@ -24,6 +24,7 @@ MAX_PAGE = 100
 class AnalysisSource(StrEnum):
     API = "api"
     CLI = "cli"
+    SCHEDULED = "scheduled"  # started by the scheduler (ADR 0010)
 
 
 class Provenance(CamelModel):

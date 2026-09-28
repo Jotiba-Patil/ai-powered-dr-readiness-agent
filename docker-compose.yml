@@ -4,6 +4,8 @@
 # to start without LLM_API_KEY. Rule-based only, no key: LLM_PROVIDER=none docker compose up --build
 # Runbook execution against the bundled mock MCP server (off by default):
 #   EXECUTION_ENABLED=true EXECUTION_ALLOW_LIVE=true docker compose up --build
+# Scheduled analysis with email (off by default); read the emails at http://localhost:8025:
+#   SCHEDULER_ENABLED=true docker compose up --build
 name: dr-readiness-agent
 
 x-hardening: &hardening
@@ -38,9 +40,22 @@ services:
       HISTORY_RETENTION_DAYS: ${HISTORY_RETENTION_DAYS:-0}
       KNOWLEDGE_ENABLED: ${KNOWLEDGE_ENABLED:-true}
       KNOWLEDGE_IN_PROMPT: ${KNOWLEDGE_IN_PROMPT:-true}
+      # Scheduled analysis: only analyzes and emails; mail goes to Mailpit on the mail network.
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-false}
+      SCHEDULER_DEFAULT_TIMEZONE: ${SCHEDULER_DEFAULT_TIMEZONE:-UTC}
+      NOTIFY_TRANSPORT: ${NOTIFY_TRANSPORT:-smtp}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      NOTIFY_FROM: ${NOTIFY_FROM:-dr-agent@example.com}
+      NOTIFY_DEFAULT_EMAIL: ${NOTIFY_DEFAULT_EMAIL:-dr-team@example.com}
+      NOTIFY_ALLOWED_DOMAINS: ${NOTIFY_ALLOWED_DOMAINS:-example.com}
+      NOTIFY_CONTACTS_FILE: mock-data/contacts.json
+      UI_BASE_URL: http://localhost:8080
+      RUNBOOK_UPLOADS_ENABLED: ${RUNBOOK_UPLOADS_ENABLED:-true}
     volumes:
       - dr-agent-data:/data
-    networks: [default, tools]
+      - dr-agent-uploads:/app/mock-data/uploads # saved runbook uploads (writable, never overwritten)
+    networks: [default, tools, mail]
     ports:
       - "127.0.0.1:8000:8000" # API + /docs, for curl and the CLI-style demo
     depends_on:
@@ -68,6 +83,16 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Local inbox for the scheduled-run emails (PoC only). SMTP is reachable only from api on the
+  # internal mail network; the web inbox is published on localhost for the demo.
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    <<: *hardening
+    networks: [default, mail]
+    ports:
+      - "127.0.0.1:8025:8025"
+    restart: unless-stopped
+
   ui:
     build:
       context: .
@@ -84,6 +109,9 @@ services:
 networks:
   tools:
     internal: true # no route out: the mock server can reach nothing and nobody reaches it but api
+  mail:
+    internal: true # SMTP between api and mailpit only
 
 volumes:
   dr-agent-data: # analyses, runbooks and executions: treat as sensitive
+  dr-agent-uploads: # runbooks uploaded from the dashboard: treat as sensitive

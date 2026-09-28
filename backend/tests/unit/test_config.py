@@ -1,49 +1,10 @@
 from pathlib import Path
 
 import pytest
+from config_env import ENV_VARS
 
 from dr_agent.config import Settings, load_settings
 from dr_agent.utils.errors import ConfigError
-
-ENV_VARS = [
-    "PORT",
-    "LOG_LEVEL",
-    "HEALTH_CHECK_TIMEOUT_MS",
-    "LLM_PROVIDER",
-    "LLM_MODEL",
-    "LLM_BASE_URL",
-    "LLM_API_KEY",
-    "LLM_RESPONSE_FORMAT",
-    "LLM_MAX_TOKENS",
-    "LLM_TIMEOUT_SECONDS",
-    "HEALTH_CHECKER",
-    "HEALTH_CHECK_CHAOS",
-    "API_HOST",
-    "API_ALLOWED_DIR",
-    "API_MAX_UPLOAD_BYTES",
-    "API_WAIT_TIMEOUT_SECONDS",
-    "API_MAX_CONCURRENT_JOBS",
-    "API_MAX_STORED_JOBS",
-    "CORS_ORIGINS",
-    "EXECUTION_ENABLED",
-    "EXECUTION_ALLOW_LIVE",
-    "EXECUTION_DB_PATH",
-    "DB_PATH",
-    "HISTORY_ENABLED",
-    "HISTORY_RETENTION_DAYS",
-    "HISTORY_STALE_AFTER_HOURS",
-    "KNOWLEDGE_ENABLED",
-    "KNOWLEDGE_MAX_RUNS",
-    "KNOWLEDGE_MAX_ANALYSES",
-    "KNOWLEDGE_IN_PROMPT",
-    "MCP_SERVERS_FILE",
-    "EXECUTION_POLICY_FILE",
-    "EXECUTION_APPROVAL_TIMEOUT_MINUTES",
-    "EXECUTION_TOOL_TIMEOUT_SECONDS",
-    "EXECUTION_MAX_TOOL_CALLS",
-    "EXECUTION_MAX_ACTIVE",
-    "EXECUTION_AI_PROPOSALS",
-]
 
 
 @pytest.fixture(autouse=True)

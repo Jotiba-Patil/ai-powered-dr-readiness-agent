@@ -133,7 +133,7 @@ async def execute_runbook(
                 )
         record = analysis.record
         show_analysis(console, record.report)
-        show_history_state(console, analysis)
+        show_history_state(console, analysis, settings.display_zone)
         mode = ExecutionMode.LIVE if live else ExecutionMode.DRY_RUN
         if not confirm(f"Execute this runbook now ({mode.value})?"):
             console.print("Not executed.")

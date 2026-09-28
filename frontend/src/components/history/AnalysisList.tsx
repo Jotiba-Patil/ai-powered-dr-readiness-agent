@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { AnalysisSummary, RiskLevel } from "../../api/types";
 import type { HistoryFilters } from "../../hooks/useHistory";
-import { RISK_TONES, utcMinute } from "../../lib/labels";
+import { RISK_TONES, formatDateTime } from "../../lib/labels";
 import { Badge } from "../Badge";
 
 const RISK_LEVELS: RiskLevel[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -93,7 +93,7 @@ export function AnalysisList({ items, filters, onFilters, hasMore, onMore, onOpe
                   className="border-t border-slate-100 transition hover:bg-signal-500/5"
                 >
                   <td className="tabular px-3 py-2.5 text-slate-600">
-                    {utcMinute(item.completedAt)}
+                    {formatDateTime(item.completedAt)}
                   </td>
                   <td className="px-3">
                     <span className="font-medium text-ink-900">{item.serviceName}</span>
@@ -120,7 +120,7 @@ export function AnalysisList({ items, filters, onFilters, hasMore, onMore, onOpe
                       type="button"
                       onClick={() => onOpen(item.id)}
                       className="btn-ghost py-1 text-xs"
-                      aria-label={`Open ${item.serviceName} analysis from ${utcMinute(item.completedAt)}`}
+                      aria-label={`Open ${item.serviceName} analysis from ${formatDateTime(item.completedAt)}`}
                     >
                       Open
                     </button>

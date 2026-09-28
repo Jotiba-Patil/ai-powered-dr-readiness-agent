@@ -13,8 +13,10 @@ Short records of significant decisions: what was decided, why, and what it costs
 | [0007](0007-persist-analyses.md) | Persist analyses in the SQLite store, linked to executions | Accepted |
 | [0008](0008-store-raw-runbook.md) | Store the raw runbook Markdown with each analysis | Accepted |
 | [0009](0009-knowledge-base-measured-facts.md) | Knowledge base from measured facts only, matched by exact identity | Accepted |
+| [0010](0010-in-process-scheduler.md) | In-process scheduler with schedules in the shared SQLite file | Accepted |
+| [0011](0011-recipients-and-email-content.md) | Email recipients from a contact directory; email carries code-computed facts only | Accepted |
 
-Context: 0001-0006 [Design: human-authorized runbook execution via MCP](../design/runbook-execution.md); 0007-0009 [Design: analysis history and DR knowledge base](../design/analysis-history.md).
+Context: 0001-0006 [Design: human-authorized runbook execution via MCP](../design/runbook-execution.md); 0007-0009 [Design: analysis history and DR knowledge base](../design/analysis-history.md); 0010-0011 [Design: scheduled readiness analysis with email notification](../design/scheduled-analysis.md).
 
 ## Template
 

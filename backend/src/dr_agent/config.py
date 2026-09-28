@@ -5,10 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import SettingsConfigDict
 
+from dr_agent.config_extras import NotifyAndUploadSettings
 from dr_agent.utils.errors import ConfigError
 
 DEFAULT_DB_FILE = "dr-agent.db"
@@ -16,7 +18,7 @@ DEFAULT_DB_FILE = "dr-agent.db"
 LogLevel = Literal["debug", "info", "warning", "error", "critical"]
 
 
-class Settings(BaseSettings):
+class Settings(NotifyAndUploadSettings):
     """Runtime settings. Field names map to upper-case env vars (PORT, LOG_LEVEL, ...)."""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", frozen=True)
@@ -67,6 +69,12 @@ class Settings(BaseSettings):
     knowledge_max_runs: int = Field(default=10, ge=1, le=100)
     knowledge_max_analyses: int = Field(default=20, ge=1, le=200)
     knowledge_in_prompt: bool = True
+    # Scheduled analysis (Phase 16, ADR 0010): off by default, needs the history.
+    scheduler_enabled: bool = False
+    scheduler_tick_seconds: float = Field(default=30.0, gt=0)
+    scheduler_max_schedules: int = Field(default=50, ge=1, le=1000)
+    scheduler_max_pause_days: int = Field(default=90, ge=1, le=365)
+    scheduler_default_timezone: str = "UTC"
 
     @property
     def database_path(self) -> Path:
@@ -76,6 +84,22 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> list[str]:
         """`CORS_ORIGINS` is a comma-separated list (easier to set in env than JSON)."""
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @field_validator("scheduler_enabled")
+    @classmethod
+    def _needs_history(cls, value: bool, info: ValidationInfo) -> bool:
+        if value and not info.data.get("history_enabled", True):
+            raise ValueError("needs HISTORY_ENABLED=true (scheduled runs must stay executable)")
+        return value
+
+    @field_validator("scheduler_default_timezone")
+    @classmethod
+    def _check_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError(f"unknown timezone {value!r}") from exc
+        return value
 
     @field_validator("log_level", mode="before")
     @classmethod

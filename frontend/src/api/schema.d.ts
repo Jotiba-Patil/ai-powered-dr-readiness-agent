@@ -228,6 +228,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/dr/samples/runbooks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload Runbook
+     * @description Save a runbook (JSON `{fileName, markdown}` or multipart `file`) for analyses and schedules.
+     *
+     *     It must parse as a runbook (`422 PARSE_ERROR` otherwise) and is never overwritten:
+     *     a taken name gets `-2`, `-3`, ... `403 UPLOADS_DISABLED` with `RUNBOOK_UPLOADS_ENABLED=false`.
+     */
+    post: operations["upload_runbook_api_v1_dr_samples_runbooks_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/execution/settings": {
     parameters: {
       query?: never;
@@ -400,6 +423,255 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/schedule-runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Run
+     * @description One run; execute it with `POST /executions {analysisJobId: analysisId}`.
+     */
+    get: operations["get_run_api_v1_schedule_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedule-runs/{run_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Run
+     * @description Stops a running run and its analysis; no email is sent. `409` if it is not running.
+     */
+    post: operations["cancel_run_api_v1_schedule_runs__run_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/scheduler": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Scheduler State
+     * @description Whether everything is paused, and the limits the dashboard needs.
+     */
+    get: operations["scheduler_state_api_v1_scheduler_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/scheduler/pause": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pause All
+     * @description No schedule starts a run until resumed (or until `until`); running runs finish.
+     */
+    post: operations["pause_all_api_v1_scheduler_pause_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/scheduler/recipient-preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Recipient Preview
+     * @description Who a run of this runbook would email now (reads the runbook's owner).
+     */
+    get: operations["recipient_preview_api_v1_scheduler_recipient_preview_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/scheduler/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resume All
+     * @description Every active schedule continues from its next slot after now.
+     */
+    post: operations["resume_all_api_v1_scheduler_resume_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Schedules
+     * @description All schedules, oldest first, each with its latest run.
+     */
+    get: operations["list_schedules_api_v1_schedules_get"];
+    put?: never;
+    /**
+     * Create Schedule
+     * @description Paths are relative to `API_ALLOWED_DIR` and checked now and on every run.
+     */
+    post: operations["create_schedule_api_v1_schedules_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules/{schedule_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Schedule */
+    get: operations["get_schedule_api_v1_schedules__schedule_id__get"];
+    /**
+     * Update Schedule
+     * @description Replaces the settings; a paused schedule stays paused.
+     */
+    put: operations["update_schedule_api_v1_schedules__schedule_id__put"];
+    post?: never;
+    /**
+     * Delete Schedule
+     * @description Cancels a running run first; the analyses stay in the history.
+     */
+    delete: operations["delete_schedule_api_v1_schedules__schedule_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules/{schedule_id}/pause": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pause Schedule
+     * @description `until` resumes it automatically (at most `SCHEDULER_MAX_PAUSE_DAYS` ahead).
+     */
+    post: operations["pause_schedule_api_v1_schedules__schedule_id__pause_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules/{schedule_id}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resume Schedule
+     * @description Continues from the next slot after now; missed slots are skipped.
+     */
+    post: operations["resume_schedule_api_v1_schedules__schedule_id__resume_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules/{schedule_id}/run-now": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run Now
+     * @description Starts a run now (also while paused); `409` while a run of it is still going.
+     */
+    post: operations["run_now_api_v1_schedules__schedule_id__run_now_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedules/{schedule_id}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Runs
+     * @description Runs of a schedule, newest first.
+     */
+    get: operations["list_runs_api_v1_schedules__schedule_id__runs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/services/{service_name}/history": {
     parameters: {
       query?: never;
@@ -491,7 +763,7 @@ export interface components {
      * AnalysisSource
      * @enum {string}
      */
-    AnalysisSource: "api" | "cli";
+    AnalysisSource: "api" | "cli" | "scheduled";
     /** AnalysisSummary */
     AnalysisSummary: {
       /** Aianalysisavailable */
@@ -655,6 +927,36 @@ export interface components {
       /** Startedby */
       startedBy: string;
     };
+    /**
+     * CreateScheduleRequest
+     * @description A new schedule. `timezone` defaults to `SCHEDULER_DEFAULT_TIMEZONE` when left out.
+     */
+    CreateScheduleRequest: {
+      /** Cadence */
+      cadence:
+        | components["schemas"]["HourlyCadence"]
+        | components["schemas"]["DailyCadence"]
+        | components["schemas"]["WeeklyCadence"]
+        | components["schemas"]["MonthlyCadence"];
+      /**
+       * Createdby
+       * @description Name of the person
+       */
+      createdBy: string;
+      /** Inventorypath */
+      inventoryPath?: string | null;
+      /** Name */
+      name: string;
+      /** Recipients */
+      recipients?: string[] | null;
+      /** Runbookpath */
+      runbookPath: string;
+      /**
+       * Timezone
+       * @default UTC
+       */
+      timezone: string;
+    };
     /** DRReadinessReport */
     DRReadinessReport: {
       /**
@@ -683,6 +985,19 @@ export interface components {
       suggestions?: components["schemas"]["Suggestion"][];
       /** Summary */
       summary: string;
+    };
+    /** DailyCadence */
+    DailyCadence: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "daily";
+      /**
+       * Time
+       * @description Local time HH:MM
+       */
+      time: string;
     };
     /** DependencyHealth */
     DependencyHealth: {
@@ -734,6 +1049,11 @@ export interface components {
        */
       up: number;
     };
+    /**
+     * EmailState
+     * @enum {string}
+     */
+    EmailState: "sent" | "failed" | "skipped";
     /**
      * ErrorBody
      * @description The shared error shape: `{error, code, details?}`.
@@ -931,6 +1251,16 @@ export interface components {
      * @enum {string}
      */
     HealthStatus: "UP" | "DOWN" | "UNREACHABLE";
+    /** HourlyCadence */
+    HourlyCadence: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "hourly";
+      /** Minute */
+      minute: number;
+    };
     /** InventoryService */
     InventoryService: {
       /**
@@ -1002,6 +1332,37 @@ export interface components {
       reason?: string | null;
     };
     /**
+     * MonthlyCadence
+     * @description Day 1-31 or "last"; a day the month lacks runs on its last day (never skipped).
+     */
+    MonthlyCadence: {
+      /** Day */
+      day: number | "last";
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "monthly";
+      /**
+       * Time
+       * @description Local time HH:MM
+       */
+      time: string;
+    };
+    /** PauseRequest */
+    PauseRequest: {
+      /**
+       * By
+       * @description Name of the person
+       */
+      by: string;
+      /**
+       * Until
+       * @description Resume automatically then; empty pauses until resumed
+       */
+      until?: string | null;
+    };
+    /**
      * PlannedToolCall
      * @description A tool call written in a runbook annotation: `<server>/<tool> {JSON arguments}`.
      *
@@ -1045,6 +1406,27 @@ export interface components {
       /** Promptversion */
       promptVersion: string;
     };
+    /** RecipientPreview */
+    RecipientPreview: {
+      /** Addresses */
+      addresses: string[];
+      /**
+       * Dropped
+       * @description Addresses refused by NOTIFY_ALLOWED_DOMAINS
+       */
+      dropped: number;
+      /**
+       * Ownerfound
+       * @description The runbook owner matched the contact directory
+       */
+      ownerFound: boolean;
+      source: components["schemas"]["RecipientSource"];
+    };
+    /**
+     * RecipientSource
+     * @enum {string}
+     */
+    RecipientSource: "override" | "directory" | "default" | "none";
     /** ReportMeta */
     ReportMeta: {
       /** Agentversion */
@@ -1060,6 +1442,14 @@ export interface components {
       inventoryFile: string;
       /** Runbookfile */
       runbookFile: string;
+    };
+    /** ResumeRequest */
+    ResumeRequest: {
+      /**
+       * By
+       * @description Name of the person
+       */
+      by: string;
     };
     /**
      * RiskClass
@@ -1087,6 +1477,26 @@ export interface components {
       /** Totalestimatedminutes */
       totalEstimatedMinutes: number;
     };
+    /** RunPage */
+    RunPage: {
+      /** Items */
+      items: components["schemas"]["ScheduleRun"][];
+      /**
+       * Nextbefore
+       * @description Pass as `before` for the next page; null on the last page
+       */
+      nextBefore?: string | null;
+    };
+    /**
+     * RunState
+     * @enum {string}
+     */
+    RunState: "running" | "succeeded" | "failed" | "cancelled";
+    /**
+     * RunTrigger
+     * @enum {string}
+     */
+    RunTrigger: "scheduled" | "manual";
     /** SampleFile */
     SampleFile: {
       /** Content */
@@ -1103,6 +1513,166 @@ export interface components {
       inventories: string[];
       /** Runbooks */
       runbooks: string[];
+    };
+    /** ScheduleRun */
+    ScheduleRun: {
+      /**
+       * Analysisid
+       * @description Set when the analysis is stored
+       */
+      analysisId?: string | null;
+      emailState?: components["schemas"]["EmailState"] | null;
+      /** Emailto */
+      emailTo?: string[];
+      /** Error */
+      error?: string | null;
+      /** Errorcode */
+      errorCode?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /** Id */
+      id: string;
+      /** Jobid */
+      jobId?: string | null;
+      riskLevel?: components["schemas"]["RiskLevel"] | null;
+      /** Riskscore */
+      riskScore?: number | null;
+      /** Rtofeasible */
+      rtoFeasible?: boolean | null;
+      /** Scheduleid */
+      scheduleId: string;
+      /**
+       * Slotat
+       * Format: date-time
+       */
+      slotAt: string;
+      /**
+       * Startedat
+       * Format: date-time
+       */
+      startedAt: string;
+      /** @default running */
+      state: components["schemas"]["RunState"];
+      trigger: components["schemas"]["RunTrigger"];
+    };
+    /**
+     * ScheduleSpec
+     * @description The fields a user sets when creating or editing a schedule.
+     */
+    ScheduleSpec: {
+      /** Cadence */
+      cadence:
+        | components["schemas"]["HourlyCadence"]
+        | components["schemas"]["DailyCadence"]
+        | components["schemas"]["WeeklyCadence"]
+        | components["schemas"]["MonthlyCadence"];
+      /** Inventorypath */
+      inventoryPath?: string | null;
+      /** Name */
+      name: string;
+      /** Recipients */
+      recipients?: string[] | null;
+      /** Runbookpath */
+      runbookPath: string;
+      /**
+       * Timezone
+       * @default UTC
+       */
+      timezone: string;
+    };
+    /** ScheduleView */
+    ScheduleView: {
+      /** Cadence */
+      cadence:
+        | components["schemas"]["HourlyCadence"]
+        | components["schemas"]["DailyCadence"]
+        | components["schemas"]["WeeklyCadence"]
+        | components["schemas"]["MonthlyCadence"];
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Createdby */
+      createdBy: string;
+      /**
+       * Description
+       * @description Cadence in words, e.g. 'Daily 06:00 Europe/Berlin'
+       */
+      description: string;
+      /**
+       * Enabled
+       * @default true
+       */
+      enabled: boolean;
+      /** Id */
+      id: string;
+      /** Inventorypath */
+      inventoryPath?: string | null;
+      lastRun?: components["schemas"]["ScheduleRun"] | null;
+      /** Lastrunat */
+      lastRunAt?: string | null;
+      /** Name */
+      name: string;
+      /** Nextrunat */
+      nextRunAt?: string | null;
+      /** Pauseuntil */
+      pauseUntil?: string | null;
+      /** Pausedat */
+      pausedAt?: string | null;
+      /** Pausedby */
+      pausedBy?: string | null;
+      /** Recipients */
+      recipients?: string[] | null;
+      /** Runbookpath */
+      runbookPath: string;
+      /**
+       * Timezone
+       * @default UTC
+       */
+      timezone: string;
+      /**
+       * Updatedat
+       * Format: date-time
+       */
+      updatedAt: string;
+    };
+    /**
+     * SchedulerView
+     * @description The global pause state plus the limits a client needs; never SMTP details.
+     */
+    SchedulerView: {
+      /** Alloweddomains */
+      allowedDomains: string[];
+      /**
+       * Defaultrecipient
+       * @description NOTIFY_DEFAULT_EMAIL is set
+       */
+      defaultRecipient: boolean;
+      /** Defaulttimezone */
+      defaultTimezone: string;
+      /**
+       * Emailtransport
+       * @description `smtp` sends mail; `log` only logs it
+       */
+      emailTransport: string;
+      /** Maxpausedays */
+      maxPauseDays: number;
+      /** Maxschedules */
+      maxSchedules: number;
+      /** Pauseuntil */
+      pauseUntil?: string | null;
+      /**
+       * Paused
+       * @default false
+       */
+      paused: boolean;
+      /** Pausedat */
+      pausedAt?: string | null;
+      /** Pausedby */
+      pausedBy?: string | null;
+      /** Tickseconds */
+      tickSeconds: number;
     };
     /**
      * ServiceHistory
@@ -1380,6 +1950,29 @@ export interface components {
       /** Server */
       server: string;
     };
+    /** UploadRunbookRequest */
+    UploadRunbookRequest: {
+      /**
+       * Filename
+       * @example my-runbook.md
+       */
+      fileName: string;
+      /**
+       * Markdown
+       * @description The runbook's Markdown text
+       */
+      markdown: string;
+    };
+    /** UploadedRunbook */
+    UploadedRunbook: {
+      /**
+       * Path
+       * @description Relative to API_ALLOWED_DIR, e.g. uploads/my-runbook.md
+       */
+      path: string;
+      /** Servicename */
+      serviceName: string;
+    };
     /** ValidationError */
     ValidationError: {
       /** Context */
@@ -1392,6 +1985,24 @@ export interface components {
       msg: string;
       /** Error Type */
       type: string;
+    };
+    /** WeeklyCadence */
+    WeeklyCadence: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "weekly";
+      /**
+       * Time
+       * @description Local time HH:MM
+       */
+      time: string;
+      /**
+       * Weekday
+       * @enum {string}
+       */
+      weekday: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
     };
   };
   responses: never;
@@ -1697,7 +2308,10 @@ export interface operations {
   };
   get_analysis_report_html_api_v1_analyses__analysis_id__report_html_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Reader's IANA timezone for displayed times; UTC if omitted */
+        tz?: string | null;
+      };
       header?: never;
       path: {
         analysis_id: string;
@@ -2058,7 +2672,10 @@ export interface operations {
   };
   get_job_report_html_api_v1_dr_jobs__job_id__report_html_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Reader's IANA timezone for displayed times; UTC if omitted */
+        tz?: string | null;
+      };
       header?: never;
       path: {
         job_id: string;
@@ -2170,6 +2787,79 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_runbook_api_v1_dr_samples_runbooks_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UploadRunbookRequest"];
+        "multipart/form-data": {
+          /** Format: binary */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UploadedRunbook"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
         };
       };
     };
@@ -2842,6 +3532,1028 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HealthResponse"];
+        };
+      };
+    };
+  };
+  get_run_api_v1_schedule_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleRun"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  cancel_run_api_v1_schedule_runs__run_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleRun"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  scheduler_state_api_v1_scheduler_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SchedulerView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  pause_all_api_v1_scheduler_pause_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PauseRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SchedulerView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  recipient_preview_api_v1_scheduler_recipient_preview_get: {
+    parameters: {
+      query: {
+        runbookPath: string;
+        recipients?: string[] | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecipientPreview"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  resume_all_api_v1_scheduler_resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResumeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SchedulerView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  list_schedules_api_v1_schedules_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"][];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  create_schedule_api_v1_schedules_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateScheduleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  get_schedule_api_v1_schedules__schedule_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  update_schedule_api_v1_schedules__schedule_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScheduleSpec"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  delete_schedule_api_v1_schedules__schedule_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  pause_schedule_api_v1_schedules__schedule_id__pause_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PauseRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  resume_schedule_api_v1_schedules__schedule_id__resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResumeRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleView"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  run_now_api_v1_schedules__schedule_id__run_now_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleRun"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+    };
+  };
+  list_runs_api_v1_schedules__schedule_id__runs_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        /** @description `nextBefore` of the last page */
+        before?: string | null;
+      };
+      header?: never;
+      path: {
+        schedule_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RunPage"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorBody"];
         };
       };
     };

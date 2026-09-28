@@ -30,7 +30,7 @@ describe("history client", () => {
     const { api } = recorder({});
     expect(api.analysisRunbookUrl("a/b")).toBe("http://api.test/api/v1/analyses/a%2Fb/runbook");
     expect(api.analysisReportHtmlUrl("job-1")).toBe(
-      "http://api.test/api/v1/analyses/job-1/report.html",
+      "http://api.test/api/v1/analyses/job-1/report.html?tz=UTC",
     );
   });
 
