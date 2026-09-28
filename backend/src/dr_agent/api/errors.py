@@ -21,12 +21,15 @@ from dr_agent.utils.errors import (
     HistoryDisabledError,
     InvalidTransitionError,
     NotFoundError,
+    NotificationError,
     ParseError,
     PathNotAllowedError,
     PayloadTooLargeError,
     PolicyViolationError,
+    SchedulerDisabledError,
     StaleCallError,
     ToolError,
+    UploadsDisabledError,
     ValidationError,
 )
 from dr_agent.utils.logging import get_logger
@@ -36,6 +39,8 @@ _STATUS_BY_ERROR: dict[type[AppError], int] = {
     PathNotAllowedError: 403,
     ExecutionDisabledError: 403,
     HistoryDisabledError: 403,
+    SchedulerDisabledError: 403,
+    UploadsDisabledError: 403,
     NotFoundError: 404,
     ConflictError: 409,
     InvalidTransitionError: 409,
@@ -47,6 +52,7 @@ _STATUS_BY_ERROR: dict[type[AppError], int] = {
     CapacityError: 429,
     AnalysisError: 502,
     ToolError: 502,
+    NotificationError: 502,
     ConfigError: 500,
 }
 _log = get_logger("dr_agent.api.errors")

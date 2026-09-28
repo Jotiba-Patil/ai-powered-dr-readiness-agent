@@ -1,11 +1,17 @@
 import asyncio
 from datetime import UTC, datetime
 from itertools import count
+from pathlib import Path
 
 import pytest
+from history_support import PROVENANCE, make_record
 
+from dr_agent.api.analysis_lookup import history_saver
 from dr_agent.api.jobs import Job, JobStore
 from dr_agent.api.schemas import JobState
+from dr_agent.config import Settings
+from dr_agent.history.models import AnalysisSource
+from dr_agent.history.service import open_history
 from dr_agent.models.report import DRReadinessReport
 from dr_agent.utils.errors import CapacityError, NotFoundError, ParseError
 
@@ -150,3 +156,45 @@ async def test_finished_jobs_are_evicted_oldest_first(sample_report: DRReadiness
 def test_unknown_job_raises_not_found() -> None:
     with pytest.raises(NotFoundError):
         _store().get("missing")
+
+
+async def test_cancel_stops_an_unfinished_job(sample_report: DRReadinessReport) -> None:
+    store = _store()
+    gate = asyncio.Event()
+
+    async def slow() -> DRReadinessReport:
+        await gate.wait()
+        return sample_report
+
+    job = store.submit(slow, source=AnalysisSource.SCHEDULED)
+    await asyncio.sleep(0)
+    assert job.source is AnalysisSource.SCHEDULED
+    cancelled = await store.cancel(job.id)
+    assert cancelled.state is JobState.FAILED
+    assert cancelled.error is not None
+    assert cancelled.error.code == "CANCELLED"
+    assert (await store.cancel(job.id)) is job  # finished: left as is
+    with pytest.raises(NotFoundError):
+        await store.cancel("nope")
+
+
+async def test_history_saver_records_the_job_source(
+    sample_report: DRReadinessReport, tmp_path: Path
+) -> None:
+    history = await open_history(Settings(_env_file=None, db_path=str(tmp_path / "h.db")))
+    assert history is not None
+    store = JobStore(
+        max_concurrent=1,
+        max_stored=5,
+        clock=lambda: FIXED,
+        on_success=history_saver(history, PROVENANCE),
+    )
+    runbook = make_record().runbook
+
+    async def work() -> DRReadinessReport:
+        return sample_report
+
+    job = store.submit(work, runbook=runbook, source=AnalysisSource.SCHEDULED)
+    await store.wait(job, 1)
+    assert job.history_saved is True
+    assert (await history.store.get(job.id)).source is AnalysisSource.SCHEDULED

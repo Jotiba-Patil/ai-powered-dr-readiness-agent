@@ -40,8 +40,9 @@ def test_fresh_file_gets_every_migration(tmp_path: Path) -> None:
     path = tmp_path / "db.sqlite"
     open_database(path)
     assert {"executions", "audit_events", "analyses", "schema_version"} <= _tables(path)
+    assert {"schedules", "schedule_runs", "scheduler_state"} <= _tables(path)
     with connect(path) as conn:
-        assert schema_version(conn) == LATEST_VERSION == 2
+        assert schema_version(conn) == LATEST_VERSION == 3
         columns = {row[1] for row in conn.execute("PRAGMA table_info(executions)")}
     assert "analysis_id" in columns
 
@@ -55,6 +56,22 @@ def test_version_1_file_keeps_its_executions(tmp_path: Path) -> None:
         assert schema_version(conn) == LATEST_VERSION
         rows = conn.execute("SELECT id, audit_seq, analysis_id FROM executions").fetchall()
     assert rows == [("old", 3, None)]
+
+
+def test_version_2_file_gains_schedules_and_keeps_its_data(tmp_path: Path) -> None:
+    """A database as Phases 13-14 left it: executions and analyses, version 2."""
+    path = tmp_path / "v2.db"
+    _version_1_file(path)
+    with closing(sqlite3.connect(path)) as conn, conn:
+        for statement in MIGRATIONS[1]:
+            conn.execute(statement)
+        conn.execute("UPDATE schema_version SET version = 2")
+    open_database(path)
+    with connect(path) as conn:
+        assert schema_version(conn) == 3
+        assert conn.execute("SELECT id FROM executions").fetchall() == [("old",)]
+        state = conn.execute("SELECT paused, pause_until FROM scheduler_state").fetchall()
+    assert state == [(0, None)]
 
 
 def test_newer_database_is_refused(tmp_path: Path) -> None:

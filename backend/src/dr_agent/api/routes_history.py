@@ -14,7 +14,7 @@ from fastapi import Path as PathParam
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
 from dr_agent.api.deps import AppState, get_state
-from dr_agent.api.routes import html_report
+from dr_agent.api.routes import Tz, html_report
 from dr_agent.api.schemas import ErrorBody
 from dr_agent.api.schemas_execution import AuditView, ExecutionSummary
 from dr_agent.api.schemas_history import AnalysisDetail, AnalysisPage, StoredExecution
@@ -91,9 +91,11 @@ async def get_analysis_runbook(analysis_id: AnalysisId, history: HistoryDep) -> 
 
 
 @router.get("/analyses/{analysis_id}/report.html", response_class=HTMLResponse, responses=ERRORS)
-async def get_analysis_report_html(analysis_id: AnalysisId, history: HistoryDep) -> HTMLResponse:
+async def get_analysis_report_html(
+    analysis_id: AnalysisId, history: HistoryDep, tz: Tz = None
+) -> HTMLResponse:
     record = await history.store.get(analysis_id)
-    return html_report(record.id, record.report)
+    return html_report(record.id, record.report, tz)
 
 
 @router.get(

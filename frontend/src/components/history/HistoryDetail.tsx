@@ -1,6 +1,6 @@
 import type { Api } from "../../api/client";
 import { useStoredAnalysis } from "../../hooks/useStoredAnalysis";
-import { utcMinute } from "../../lib/labels";
+import { formatDateTime } from "../../lib/labels";
 import { ReportView } from "../ReportView";
 import { ErrorPanel } from "../StatusPanel";
 import { PastExecutions } from "./PastExecutions";
@@ -43,7 +43,7 @@ export function HistoryDetail({
       <div className="flex flex-wrap items-center justify-between gap-2">
         {back}
         <p className="text-sm text-slate-600">
-          Analyzed {utcMinute(summary.completedAt)} from {summary.runbookLabel} (
+          Analyzed {formatDateTime(summary.completedAt)} from {summary.runbookLabel} (
           {provenance.llmModel ?? "rules only"}).{" "}
           <a
             href={api.analysisRunbookUrl(analysisId)}
@@ -58,8 +58,9 @@ export function HistoryDetail({
           role="status"
           className="rounded-xl bg-amber-50 p-3 text-amber-900 ring-1 ring-amber-200"
         >
-          <span aria-hidden="true">⚠ </span>This analysis is from {utcMinute(summary.completedAt)}.
-          Dependency health may have changed since; analyze the runbook again before running it.
+          <span aria-hidden="true">⚠ </span>This analysis is from{" "}
+          {formatDateTime(summary.completedAt)}. Dependency health may have changed since; analyze
+          the runbook again before running it.
         </p>
       )}
       <div aria-label="Stored readiness report">

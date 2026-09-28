@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import tzinfo
+
 from rich.console import Console
 
 from dr_agent.cli_analysis import CliAnalysis
 from dr_agent.models.report import DRReadinessReport
+from dr_agent.utils.timefmt import display_time
 
 
 def show_analysis(console: Console, report: DRReadinessReport) -> None:
@@ -26,11 +29,11 @@ def show_analysis(console: Console, report: DRReadinessReport) -> None:
         )
 
 
-def show_history_state(console: Console, analysis: CliAnalysis) -> None:
+def show_history_state(console: Console, analysis: CliAnalysis, zone: tzinfo | None) -> None:
     record = analysis.record
     if analysis.stale:
         console.print(
-            f"[yellow]Analysis {record.id} is from {record.completed_at:%Y-%m-%d %H:%M} UTC; "
+            f"[yellow]Analysis {record.id} is from {display_time(record.completed_at, zone)}; "
             "dependency health may have changed since. Consider analyzing again.[/]"
         )
     elif analysis.saved:

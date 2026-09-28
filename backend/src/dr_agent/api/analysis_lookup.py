@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from dr_agent.api.deps import AppState
 from dr_agent.api.jobs import Job, OnSuccess
 from dr_agent.api.schemas import JobState, JobView
-from dr_agent.history.models import AnalysisRecord, AnalysisSource, Provenance
+from dr_agent.history.models import AnalysisRecord, Provenance
 from dr_agent.history.service import History
 from dr_agent.models.report import DRReadinessReport
 from dr_agent.models.runbook import Runbook
@@ -33,7 +33,7 @@ def history_saver(history: History, provenance: Provenance) -> OnSuccess:
             return False  # pragma: no cover - JobStore calls this only with a report
         record = AnalysisRecord(
             id=job.id,
-            source=AnalysisSource.API,
+            source=job.source,
             created_at=job.created_at,
             completed_at=job.completed_at,
             runbook_label=job.runbook_label,

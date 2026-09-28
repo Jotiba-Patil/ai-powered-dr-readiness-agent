@@ -12,6 +12,8 @@ Related decisions: [ADR 0006](adr/0006-execution-safety-controls.md) (execution 
 | LLM responses | Invented facts, malicious tool calls | Pydantic schema, code-computed facts, tool allow-list, human approval |
 | MCP tool descriptions and results | Indirect prompt injection, hostile risk hints | Escaped in prompts, never fed back into prompts, hints can only raise risk |
 | Stored history | Earlier injected text coming back in new prompts | Allow-list of measured fields only |
+| Scheduled-run emails | Injected runbook or model text in a trusted-looking email, mail sent to arbitrary addresses, header injection | Facts-only email, owner name only a directory lookup key, domain allow-list, `EmailMessage` (section 7) |
+| Uploaded runbooks (written to disk) | Path traversal, overwriting files, filling the disk, storing unusable or hostile files | One folder inside `API_ALLOWED_DIR`, sanitized name, exclusive create (never overwrite), size and file-count limits, must parse as a runbook, can be turned off (section 7) |
 | HTTP clients | Log and header injection, oversized requests, cross-origin calls | ID format check, body limits, CORS allow-list, security headers |
 
 ## 1. Prompt injection
@@ -100,10 +102,31 @@ Enforced in `backend/src/dr_agent/execution/` on the server, so the API can't be
 
 - Containers run `read_only: true`, with `cap_drop: [ALL]` and `no-new-privileges:true`.
 - `mock-mcp` sits on an `internal: true` network with no outbound route and no published port, so only `api` can reach it.
+- Uploaded runbooks live on the `dr-agent-uploads` volume at `/app/mock-data/uploads`, the only writable folder in the read-only API image (created in the image, owned by the non-root app user).
+- `mailpit` (the PoC inbox for scheduled-run emails) is reachable over SMTP only from `api` on the `internal: true` `mail` network; only its web inbox is published, on `127.0.0.1:8025`.
 - The mock MCP HTTP transport accepts only the Host header `mock-mcp:*` (DNS-rebinding protection via MCP `TransportSecuritySettings`).
 - CI runs `pip-audit` and `npm audit --audit-level=high` (`uv run poe audit`), and only open-source dependencies are allowed.
 
-## 7. Development-time guardrails (Claude Code)
+## 7. Scheduling and email
+
+`backend/src/dr_agent/scheduling/`, `notify/` (ADR 0010, ADR 0011). The core was built in Phase 16; the API (`/api/v1/schedules`, `/api/v1/scheduler`, `/api/v1/schedule-runs`, all `403 SCHEDULER_DISABLED` while off), the Schedules tab, the CLI and the Mailpit inbox in Phase 17.
+
+| Threat | Control | Where |
+|---|---|---|
+| The scheduler starting an execution | The scheduler only analyzes and emails. `scheduling/` never imports `execution/`, and a test checks both that and that no execution row appears after a scheduled run. Executions still need a person and the approval flow | `scheduling/runner.py`, `test_scheduling_control.py` |
+| Prompt-injected text reaching an inbox | Emails carry code-computed facts only: risk, RTO verdict, counts, a link. No summary, gap descriptions, suggestions or runbook text. The service name is reduced to letters, digits, `.`, `_`, `-`, and the owner's name appears only when the contact directory matched it | `notify/facts.py`, `notify/message.py` |
+| A runbook choosing where mail goes | The runbook owner is only a lookup key for the contact directory, never an address, even when it looks like one | `notify/recipients.py` |
+| Open mail relay | Every recipient must pass a format check and be in `NOTIFY_ALLOWED_DOMAINS`; at most 5 per schedule | `notify/recipients.py`, `scheduling/models.py` |
+| Email header injection | `EmailMessage` rejects CR/LF in headers; the subject is also stripped of control characters and cut to 150 characters. The HTML part is autoescaped | `notify/message.py` |
+| Path traversal through a schedule | Runbook and inventory paths go through the same allow-list as `GET /analyze`, when saved and again on every run | `scheduling/source.py` |
+| Double runs and bursts | One run per slot (one transaction plus a unique index); a slot missed during downtime runs once; a schedule with a run still going skips the slot; every resume skips missed slots | `scheduling/sqlite_claim.py` |
+| SMTP credentials | `SMTP_PASSWORD` is a `SecretStr`, covered by log redaction and never in errors | `notify/senders.py`, `config.py` |
+| Runbook uploads | Written only to `API_ALLOWED_DIR/<RUNBOOK_UPLOAD_DIR>` (a single folder name, checked to resolve inside it); `.md` / `.markdown`, UTF-8, `API_MAX_UPLOAD_BYTES`, must parse (`422` otherwise); name reduced to `[a-z0-9-]`, a taken name gets `-2`, `-3`, … (exclusive create, then a temporary file moved over the placeholder, so nothing is ever overwritten); at most `RUNBOOK_UPLOAD_MAX_FILES`; `RUNBOOK_UPLOADS_ENABLED=false` returns `403 UPLOADS_DISABLED`; text never logged | `runbook_uploads.py`, `api/body_upload.py`, `api/routes_samples.py` |
+| Report time zone | `?tz=` on the HTML export is validated as an IANA zone (`422` otherwise), never used in a path | `utils/timefmt.py` |
+| Mail in the Compose demo | Mailpit is reachable over SMTP only from `api` on the internal `mail` network; only its web inbox is published, on `127.0.0.1:8025` | `docker-compose.yml` |
+| Stopping it | Off by default (`SCHEDULER_ENABLED=false`, needs the history); pause, pause until (at most `SCHEDULER_MAX_PAUSE_DAYS`), pause all, cancel a run (no email) | `scheduling/service.py` |
+
+## 8. Development-time guardrails (Claude Code)
 
 These protect the repo while an AI coding agent works on it. They are not part of the product.
 
@@ -111,12 +134,14 @@ These protect the repo while an AI coding agent works on it. They are not part o
 - `.claude/hooks/guard_files.py` blocks edits to `.env`, lock files and the original brief, and blocks writing hardcoded secrets or `Any` types.
 - Both hooks let the action through if they fail to parse their input, so they are a convenience rather than a hard control.
 
-## 8. Known gaps (PoC)
+## 9. Known gaps (PoC)
 
 | Gap | Risk | Suggested fix before production |
 |---|---|---|
 | Delimiting and system-prompt instructions reduce injection risk but can't guarantee it | An injected runbook could still skew the model's written findings (summary, risk rationale) within what the schema allows | Keep code-computed facts as the source of truth; label LLM text as AI-generated; optionally add an injection classifier on input |
 | No authentication or authorization on the API | Anyone who can reach the API can analyze, read history and approve | Put the API behind SSO/OIDC; use role-based access for approvers |
 | Approver names are self-declared | The two-person rule depends on people being honest about who they are | Take approver identity from the authenticated user |
+| Anyone who can reach the API can upload runbooks | Bounded by the file-count and size limits, but still disk use and stored content without an owner | Tie uploads to logged-in users; add quotas per user; `RUNBOOK_UPLOADS_ENABLED=false` where not needed |
+| Schedule names and "paused by" are self-declared | Until the API has authentication, anyone who can reach it can create, pause or delete schedules | Tie schedule actions to logged-in users; only owners or admins may change a schedule |
 | No rate limiting | Repeated analysis requests can use up LLM quota or CPU | Rate-limit per client at the proxy or API layer |
 | The audit chain has no external anchor | Someone with database access could rewrite the whole chain | Periodically anchor the chain head in write-once storage |

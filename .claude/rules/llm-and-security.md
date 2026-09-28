@@ -5,6 +5,8 @@ paths:
   - "backend/src/dr_agent/execution/proposer.py"
   - "backend/src/dr_agent/knowledge/**"
   - "backend/src/dr_agent/api/**"
+  - "backend/src/dr_agent/notify/**"
+  - "backend/src/dr_agent/scheduling/**"
 ---
 
 # LLM and security rules
@@ -17,4 +19,5 @@ paths:
 - API: validate all input, cap upload size, restrict server-side file paths to an allow-listed directory (no traversal), return the shared error shape `{error, code, details?}`.
 - Tool-call proposals: offer only allow-listed tools, embed step text and tool descriptions as escaped JSON in `<step>` / `<tools>`, validate with `ToolProposal`, then allow-list + `check_call()`. Anything unusable becomes a manual step; a proposal is never approvable without a named person accepting it. Never feed tool results or rationales back into a prompt.
 - The one exception (ADR 0009): the analysis prompt's `<history>` block, built only from `knowledge/prompt_facts.py`, an explicit allow-list of code-measured numbers, enum values, timestamps, step numbers and runbook/inventory names, escaped with `prompt_json()`. Adding a field there needs a reason and a test update (`test_knowledge_prompt_facts.py`); free text (summaries, tool results, reasons, comments, rationales, report prose) is never allowed. Bump `PROMPT_VERSION` when the prompt changes.
+- Scheduled-run emails (ADR 0011) are built only from `notify/facts.py`: numbers, enums and a sanitized service name. Never put runbook text, LLM text (summary, gaps, suggestions, reasoning) or tool output into an email; the runbook owner is only a contact-directory lookup key, never an address.
 - No proprietary LLM SDKs. Providers must be swappable through the `LLMProvider` protocol.

@@ -24,7 +24,7 @@
 </head>
 <body>
   <h1>{{ report.service_summary.name }} &mdash; DR readiness report</h1>
-  <p>Owner: {{ report.service_summary.owner }} &middot; Analyzed: {{ report.meta.analyzed_at }}</p>
+  <p>Owner: {{ report.service_summary.owner }} &middot; Analyzed: {{ analyzed }}</p>
   <p>{{ report.summary }}</p>
   {% if not report.ai_analysis_available and report.ai_note %}
   <p class="note">{{ report.ai_note }}</p>

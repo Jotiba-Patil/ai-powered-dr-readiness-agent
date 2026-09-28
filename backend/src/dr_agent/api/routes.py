@@ -8,6 +8,7 @@ response shape) if the job finished in time, else still 202.
 
 from __future__ import annotations
 
+from datetime import UTC
 from pathlib import Path
 from typing import Annotated
 
@@ -29,8 +30,14 @@ from dr_agent.models.inventory import SystemInventory
 from dr_agent.models.report import DRReadinessReport
 from dr_agent.models.runbook import Runbook
 from dr_agent.service import analyze_runbook, parse_markdown
+from dr_agent.utils.timefmt import zone_or_none
 
 router = APIRouter(prefix="/api/v1")
+
+Tz = Annotated[
+    str | None,
+    Query(max_length=64, description="Reader's IANA timezone for displayed times; UTC if omitted"),
+]
 
 State = Annotated[AppState, Depends(get_state)]
 JobId = Annotated[str, PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
@@ -110,18 +117,20 @@ async def get_job(
     tags=["analysis"],
     responses={404: _ERRORS[404], 409: {"model": ErrorBody}},
 )
-async def get_job_report_html(state: State, job_id: JobId) -> HTMLResponse:
+async def get_job_report_html(state: State, job_id: JobId, tz: Tz = None) -> HTMLResponse:
     """The finished job's report as a self-contained HTML download (autoescaped)."""
     analysis = await finished_analysis(state, job_id)
-    return html_report(analysis.id, analysis.report)
+    return html_report(analysis.id, analysis.report, tz)
 
 
-def html_report(analysis_id: str, report: DRReadinessReport) -> HTMLResponse:
+def html_report(analysis_id: str, report: DRReadinessReport, tz: str | None = None) -> HTMLResponse:
+    """`tz`: the downloading browser's IANA timezone for displayed times (UTC without it)."""
     headers = {
         "Content-Disposition": f'attachment; filename="dr-report-{analysis_id}.html"',
         "Content-Security-Policy": REPORT_CSP,
     }
-    return HTMLResponse(format_html(report), headers=headers)
+    zone = zone_or_none(tz) or UTC
+    return HTMLResponse(format_html(report, zone), headers=headers)
 
 
 async def _submit(

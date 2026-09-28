@@ -55,3 +55,15 @@ export type StoredExecution = Schemas["StoredExecution"];
 // Knowledge base (Phase 14)
 export type ServiceHistory = Schemas["ServiceHistory"];
 export type StepHistory = Schemas["StepHistory"];
+
+// Scheduled analysis (Phase 17)
+export type ScheduleView = Schemas["ScheduleView"];
+export type ScheduleSpec = Schemas["ScheduleSpec"];
+export type CreateScheduleRequest = Schemas["CreateScheduleRequest"];
+export type ScheduleRun = Schemas["ScheduleRun"];
+export type RunPage = Schemas["RunPage"];
+export type SchedulerView = Schemas["SchedulerView"];
+export type RecipientPreview = Schemas["RecipientPreview"];
+export type Cadence = CreateScheduleRequest["cadence"];
+export type RunState = Schemas["RunState"];
+export type UploadedRunbook = Schemas["UploadedRunbook"];

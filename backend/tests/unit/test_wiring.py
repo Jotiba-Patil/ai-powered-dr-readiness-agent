@@ -2,6 +2,7 @@ import random
 
 import httpx
 import pytest
+from history_support import MOCK
 
 from dr_agent.config import Settings
 from dr_agent.health.live import LiveHealthChecker
@@ -9,8 +10,16 @@ from dr_agent.health.mock import MockHealthChecker
 from dr_agent.llm.disabled import DisabledProvider
 from dr_agent.llm.ollama import OllamaProvider
 from dr_agent.llm.openai_compatible import OpenAICompatibleProvider
+from dr_agent.notify.directory import EmptyContactDirectory
+from dr_agent.notify.senders import LogNotifier, SmtpNotifier
 from dr_agent.utils.errors import AnalysisError
-from dr_agent.wiring import build_checker, build_llm
+from dr_agent.wiring import (
+    build_checker,
+    build_directory,
+    build_llm,
+    build_notifier,
+    email_settings,
+)
 
 
 def _settings(**overrides: object) -> Settings:
@@ -68,3 +77,24 @@ async def test_build_checker_live_uses_timeout_setting() -> None:
         )
     assert isinstance(checker, LiveHealthChecker)
     assert checker._timeout_seconds == 1.5
+
+
+def test_build_notifier_by_transport() -> None:
+    assert isinstance(build_notifier(_settings()), LogNotifier)
+    smtp = build_notifier(_settings(notify_transport="smtp", smtp_host="mailpit", smtp_port=1025))
+    assert isinstance(smtp, SmtpNotifier)
+    assert (smtp._settings.host, smtp._settings.port) == ("mailpit", 1025)
+
+
+async def test_build_directory_and_email_settings() -> None:
+    assert isinstance(build_directory(_settings()), EmptyContactDirectory)
+    contacts = str(MOCK / "contacts.json")
+    directory = build_directory(_settings(notify_contacts_file=contacts))
+    assert await directory.email_for("Alice Chen") == "alice.chen@example.com"
+    email = email_settings(
+        _settings(notify_default_email="team@example.com", ui_base_url="http://ui:8080")
+    )
+    assert (email.sender, email.ui_base_url) == ("dr-agent@example.com", "http://ui:8080")
+    assert email.policy.default == "team@example.com"
+    assert email.policy.allows("a@example.com")
+    assert not email.policy.allows("a@other.org")

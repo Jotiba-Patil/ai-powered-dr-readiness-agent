@@ -1,5 +1,6 @@
 import type { AuditView } from "../../api/types";
 import { shortHash } from "../../lib/executionLabels";
+import { formatDateTime } from "../../lib/labels";
 
 /** The audit log and whether its hash chain verifies. Payloads are shown as text only. */
 export function AuditPanel({
@@ -34,7 +35,7 @@ export function AuditPanel({
           {audit.events.map((event) => (
             <li key={event.seq} className="grid gap-1 px-3 py-2 sm:grid-cols-[9rem_1fr]">
               <span className="tabular text-slate-500">
-                #{event.seq} {event.createdAt.slice(11, 19)}
+                #{event.seq} {formatDateTime(event.createdAt, { seconds: true })}
               </span>
               <span>
                 <span className="font-semibold text-ink-900">{event.type}</span> by {event.actor}{" "}

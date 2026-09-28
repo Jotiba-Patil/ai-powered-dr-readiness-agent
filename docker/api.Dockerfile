@@ -26,6 +26,9 @@ COPY --from=build /opt/venv /opt/venv
 WORKDIR /app
 # Samples for the dashboard picker and GET /api/v1/dr/analyze (the only readable directory).
 COPY mock-data ./mock-data
+# Saved runbook uploads (RUNBOOK_UPLOAD_DIR) live on the dr-agent-uploads volume, which copies
+# this ownership: the only writable folder under the read-only image.
+RUN mkdir -p /app/mock-data/uploads && chown app /app/mock-data/uploads
 # Runbook execution (off unless EXECUTION_ENABLED=true): the allow-list and the MCP servers
 # (the bundled mock server as the compose service `mock-mcp`).
 COPY execution-policy.json ./config/execution-policy.json

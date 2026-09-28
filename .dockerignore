@@ -27,3 +27,5 @@ frontend/coverage
 frontend/*.tsbuildinfo
 **/*.db
 **/*.db-*
+# Runbooks uploaded through the dashboard or API (user content)
+mock-data/uploads/

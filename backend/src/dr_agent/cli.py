@@ -32,6 +32,7 @@ from dr_agent.cli_common import (
 from dr_agent.cli_execute import LiveOpt, OperatorOpt, execute_runbook, exit_code
 from dr_agent.cli_history import history_app
 from dr_agent.cli_output import HealthFormat, ReportFormat, render_report, write_output
+from dr_agent.cli_schedule import schedule_app
 from dr_agent.config import Settings
 from dr_agent.formatters.format_health import format_health_json, render_health_terminal
 from dr_agent.loaders import load_inventory, read_text_file
@@ -52,6 +53,7 @@ app = typer.Typer(
     pretty_exceptions_enable=False,
 )
 app.add_typer(history_app, name="history")
+app.add_typer(schedule_app, name="schedule")
 
 RunbookOpt = Annotated[Path, typer.Option("--runbook", "-r", help="Markdown runbook path.")]
 InventoryOpt = Annotated[Path, typer.Option("--inventory", "-i", help="Inventory JSON path.")]

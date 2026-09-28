@@ -36,10 +36,10 @@ class AnalyzeInput:
 async def read_analyze_input(request: Request, max_bytes: int) -> AnalyzeInput:
     content_type = request.headers.get("content-type", "").lower()
     if content_type.startswith("application/json"):
-        _check_declared_length(request, max_bytes)
-        return _from_json(await _read_limited(request, max_bytes))
+        check_declared_length(request, max_bytes)
+        return _from_json(await read_limited(request, max_bytes))
     if content_type.startswith("multipart/form-data"):
-        _check_declared_length(request, 2 * max_bytes + _MULTIPART_OVERHEAD_BYTES)
+        check_declared_length(request, 2 * max_bytes + _MULTIPART_OVERHEAD_BYTES)
         return await _from_multipart(request, max_bytes)
     raise BadRequestError(
         "Content-Type must be application/json or multipart/form-data",
@@ -47,7 +47,7 @@ async def read_analyze_input(request: Request, max_bytes: int) -> AnalyzeInput:
     )
 
 
-def _check_declared_length(request: Request, limit: int) -> None:
+def check_declared_length(request: Request, limit: int) -> None:
     declared = request.headers.get("content-length")
     if declared is not None and declared.isdigit() and int(declared) > limit:
         raise PayloadTooLargeError(
@@ -55,7 +55,7 @@ def _check_declared_length(request: Request, limit: int) -> None:
         )
 
 
-async def _read_limited(request: Request, max_bytes: int) -> bytes:
+async def read_limited(request: Request, max_bytes: int) -> bytes:
     body = bytearray()
     async for chunk in request.stream():
         body.extend(chunk)
@@ -90,19 +90,19 @@ async def _from_multipart(request: Request, max_bytes: int) -> AnalyzeInput:
         if not isinstance(runbook_part, UploadFile):
             raise BadRequestError("multipart body needs a 'runbook' file part")
         runbook_label = safe_label(runbook_part.filename) or "runbook.md"
-        markdown = decode_utf8(await _read_part(runbook_part, max_bytes), label=runbook_label)
+        markdown = decode_utf8(await read_part(runbook_part, max_bytes), label=runbook_label)
 
         if inventory_part is None:
             return AnalyzeInput(markdown, None, runbook_label, None)
         if not isinstance(inventory_part, UploadFile):
             raise BadRequestError("'inventory' must be a file part")
         inventory_label = safe_label(inventory_part.filename) or "inventory.json"
-        text = decode_utf8(await _read_part(inventory_part, max_bytes), label=inventory_label)
+        text = decode_utf8(await read_part(inventory_part, max_bytes), label=inventory_label)
         inventory = inventory_from_text(text, label=inventory_label)
     return AnalyzeInput(markdown, inventory, runbook_label, inventory_label)
 
 
-async def _read_part(part: UploadFile, max_bytes: int) -> bytes:
+async def read_part(part: UploadFile, max_bytes: int) -> bytes:
     data = await part.read(max_bytes + 1)
     if len(data) > max_bytes:
         raise PayloadTooLargeError(

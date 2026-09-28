@@ -65,9 +65,46 @@ export function minutes(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(1)} min`;
 }
 
-/** "2026-09-25T09:00:00Z" -> "2026-09-25 09:00 UTC" (the server always sends UTC). */
-export function utcMinute(iso: string): string {
-  return `${iso.slice(0, 16).replace("T", " ")} UTC`;
+/** The browser's IANA timezone, e.g. "Asia/Calcutta"; `null` if the browser reports none. */
+export function browserTimezone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * The one way a time is shown (design scheduled-analysis 18.4): the server sends UTC and people
+ * see their own time, e.g. "28 Sep 2026, 11:30 UTC+05:30". Same text as the backend's
+ * `display_time()`; `timeZone` defaults to the browser's.
+ */
+export function formatDateTime(
+  iso: string,
+  options: { timeZone?: string; seconds?: boolean } = {},
+): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: options.timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: options.seconds ? "2-digit" : undefined,
+    hourCycle: "h23",
+    timeZoneName: "longOffset",
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  const offset = part("timeZoneName").replace(/^GMT/, "");
+  const zone = !offset || /^[+-]00:00$/.test(offset) ? "UTC" : `UTC${offset}`;
+  const clock = `${part("hour")}:${part("minute")}${options.seconds ? `:${part("second")}` : ""}`;
+  const month = MONTHS[Number(part("month")) - 1] ?? "";
+  return `${Number(part("day"))} ${month} ${part("year")}, ${clock} ${zone}`;
 }
 
 /** One line per execution step: what past live runs of it showed (information only). */

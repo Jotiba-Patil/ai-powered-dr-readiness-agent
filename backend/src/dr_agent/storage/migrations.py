@@ -58,7 +58,33 @@ _ANALYSES = (
     "CREATE INDEX executions_by_analysis ON executions (analysis_id)",
 )
 
-MIGRATIONS: tuple[tuple[str, ...], ...] = (_EXECUTIONS, _ANALYSES)
+# 3: scheduled analyses (Phase 16, ADR 0010). `job_id` is the analysis job, kept even
+# when the history could not store it; `analysis_id` is set only for a stored analysis.
+_SCHEDULES = (
+    """CREATE TABLE schedules (
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, runbook_path TEXT NOT NULL, inventory_path TEXT,
+    cadence_json TEXT NOT NULL, timezone TEXT NOT NULL, recipients_json TEXT,
+    enabled INTEGER NOT NULL, pause_until TEXT, paused_by TEXT, paused_at TEXT,
+    created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+    next_run_at TEXT, last_run_at TEXT)""",
+    "CREATE INDEX schedules_due ON schedules (enabled, next_run_at)",
+    """CREATE TABLE schedule_runs (
+    id TEXT PRIMARY KEY,
+    schedule_id TEXT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+    slot_at TEXT NOT NULL, trigger TEXT NOT NULL, state TEXT NOT NULL,
+    started_at TEXT NOT NULL, finished_at TEXT, job_id TEXT,
+    analysis_id TEXT REFERENCES analyses(id) ON DELETE SET NULL,
+    risk_score INTEGER, risk_level TEXT, rto_feasible INTEGER,
+    email_state TEXT, email_to TEXT, error_code TEXT, error TEXT)""",
+    "CREATE UNIQUE INDEX schedule_runs_slot ON schedule_runs (schedule_id, slot_at, trigger)",
+    "CREATE INDEX schedule_runs_by_schedule ON schedule_runs (schedule_id, started_at)",
+    """CREATE TABLE scheduler_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1), paused INTEGER NOT NULL,
+    pause_until TEXT, paused_by TEXT, paused_at TEXT)""",
+    "INSERT INTO scheduler_state VALUES (1, 0, NULL, NULL, NULL)",
+)
+
+MIGRATIONS: tuple[tuple[str, ...], ...] = (_EXECUTIONS, _ANALYSES, _SCHEDULES)
 LATEST_VERSION = len(MIGRATIONS)
 
 

@@ -4,10 +4,14 @@ import type { SampleList } from "../api/types";
 
 const EMPTY: SampleList = { runbooks: [], inventories: [] };
 
-/** Lists the server's sample runbooks/inventories; `load` fetches one file's text. */
+/**
+ * Lists the server's sample runbooks/inventories (uploaded runbooks included); `load` fetches one
+ * file's text and `reload` refreshes the list, e.g. after an upload.
+ */
 export function useSamples(api: Api) {
   const [samples, setSamples] = useState<SampleList>(EMPTY);
   const [error, setError] = useState<string | null>(null);
+  const [reloads, setReloads] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -22,9 +26,10 @@ export function useSamples(api: Api) {
     return () => {
       active = false;
     };
-  }, [api]);
+  }, [api, reloads]);
 
   const load = useCallback((path: string) => api.getSample(path), [api]);
+  const reload = useCallback(() => setReloads((n) => n + 1), []);
 
-  return { samples, error, load };
+  return { samples, error, load, reload };
 }

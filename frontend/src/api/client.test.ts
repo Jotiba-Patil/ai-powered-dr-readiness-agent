@@ -14,6 +14,18 @@ const json = (body: unknown, status = 200) =>
 const job = { jobId: "abc", status: "pending", createdAt: "2026-09-22T12:00:00Z" };
 
 describe("createApi", () => {
+  it("uploads a runbook as JSON and returns where it was saved", async () => {
+    let seen: Request | undefined;
+    const saved = { path: "uploads/drill.md", serviceName: "Drill" };
+    const { api } = apiWith(async (request) => {
+      seen = request;
+      return json(saved, 201);
+    });
+    await expect(api.uploadRunbook("Drill.md", "# Drill\n")).resolves.toEqual(saved);
+    expect(`${seen?.method} ${seen?.url}`).toBe("POST http://api.test/api/v1/dr/samples/runbooks");
+    expect(await seen?.json()).toEqual({ fileName: "Drill.md", markdown: "# Drill\n" });
+  });
+
   it("strips trailing slashes from the base URL", () => {
     expect(apiWith(() => json({})).api.baseUrl).toBe("http://api.test");
   });
@@ -71,7 +83,7 @@ describe("createApi", () => {
       throw new TypeError("offline");
     }, "");
     expect(api.baseUrl).toBe("");
-    expect(api.reportHtmlUrl("a b")).toBe("/api/v1/dr/jobs/a%20b/report.html");
+    expect(api.reportHtmlUrl("a b")).toBe("/api/v1/dr/jobs/a%20b/report.html?tz=UTC");
     await expect(api.listSamples()).rejects.toMatchObject({
       code: "NETWORK_ERROR",
       message: "Cannot reach the API. Is it running?",
@@ -103,7 +115,7 @@ describe("createApi", () => {
 
   it("builds an encoded HTML export URL", () => {
     expect(apiWith(() => json({})).api.reportHtmlUrl("a b")).toBe(
-      "http://api.test/api/v1/dr/jobs/a%20b/report.html",
+      "http://api.test/api/v1/dr/jobs/a%20b/report.html?tz=UTC",
     );
   });
 });

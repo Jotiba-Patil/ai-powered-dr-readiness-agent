@@ -93,6 +93,24 @@ class HistoryDisabledError(AppError):
     code = "HISTORY_DISABLED"
 
 
+class SchedulerDisabledError(AppError):
+    """Scheduled analysis is switched off (`SCHEDULER_ENABLED=false`)."""
+
+    code = "SCHEDULER_DISABLED"
+
+
+class UploadsDisabledError(AppError):
+    """Saving uploaded runbooks is switched off (`RUNBOOK_UPLOADS_ENABLED=false`)."""
+
+    code = "UPLOADS_DISABLED"
+
+
+class NotificationError(AppError):
+    """An email could not be sent (SMTP failure, timeout, refused recipients)."""
+
+    code = "NOTIFICATION_FAILED"
+
+
 class InvalidTransitionError(AppError):
     """A step or execution cannot move from its current state on the requested event."""
 

@@ -1,6 +1,6 @@
 import type { Report } from "../../api/types";
 import { downloadText, slug } from "../../lib/download";
-import { minutes } from "../../lib/labels";
+import { formatDateTime, minutes } from "../../lib/labels";
 import { kpis, verdict, type Mood } from "../../lib/verdict";
 import { RiskGauge } from "../RiskGauge";
 import { Icon } from "../ui/Icon";
@@ -40,8 +40,7 @@ export function VerdictHero({ report, htmlUrl }: { report: Report; htmlUrl: stri
               <h3 className="text-2xl font-semibold text-ink-900">{service.name}</h3>
               <p className="text-sm text-slate-600">
                 Owner {service.owner} · RTO {minutes(service.statedRTO)} · RPO{" "}
-                {minutes(service.statedRPO)} · analyzed{" "}
-                {new Date(report.meta.analyzedAt).toLocaleString()} in{" "}
+                {minutes(service.statedRPO)} · analyzed {formatDateTime(report.meta.analyzedAt)} in{" "}
                 {(report.meta.analysisTimeMs / 1000).toFixed(1)} s
               </p>
             </div>

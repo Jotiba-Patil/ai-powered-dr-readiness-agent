@@ -28,3 +28,5 @@ frontend/*.tsbuildinfo
 *.db-*
 *.db-wal
 *.db-shm
+# Runbooks uploaded through the dashboard or API (user content)
+mock-data/uploads/
