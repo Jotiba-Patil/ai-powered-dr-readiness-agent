@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { ScheduleView } from "../../api/types";
-import { formatDateTime } from "../../lib/labels";
-import { RUN_TONES, runResult, scheduleState } from "../../lib/scheduleLabels";
-import { Badge } from "../Badge";
+import { Icon } from "../ui/Icon";
 import { PauseForm } from "./PauseForm";
+import { ScheduleRow } from "./ScheduleRow";
 
 export interface ScheduleActions {
   open: (scheduleId: string) => void;
@@ -19,114 +18,74 @@ export function ScheduleList({
   actions,
   canAct,
   maxPauseDays,
+  openId,
 }: {
   schedules: ScheduleView[];
   actions: ScheduleActions;
   canAct: boolean;
   maxPauseDays: number;
+  openId?: string | null;
 }) {
   const [pausing, setPausing] = useState<string | null>(null);
   if (schedules.length === 0) {
-    return <p className="text-sm text-slate-600">No schedules yet. Create one below.</p>;
+    return (
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 p-8 text-center">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-signal-500/10 text-signal-700">
+          <Icon name="calendar" className="h-5 w-5" />
+        </span>
+        <p className="font-medium text-ink-900">No schedules yet. Create one below.</p>
+        <p className="max-w-md text-sm text-slate-600">
+          A schedule re-checks a runbook every hour, day, week or month and emails the owner a
+          facts-only summary.
+        </p>
+      </div>
+    );
   }
   return (
-    <table className="w-full text-left text-sm">
-      <thead className="text-xs text-slate-500 uppercase">
-        <tr>
-          <th className="py-2">Schedule</th>
-          <th>When</th>
-          <th>Next run</th>
-          <th>Last run</th>
-          <th>State</th>
-          <th>
-            <span className="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {schedules.map((s) => (
-          <tr key={s.id} className="border-t border-slate-200 align-top">
-            <td className="py-2">
-              <button
-                type="button"
-                className="font-medium text-signal-700 underline"
-                onClick={() => actions.open(s.id)}
-              >
-                {s.name}
-              </button>
-              <span className="block text-xs text-slate-500">{s.runbookPath}</span>
-            </td>
-            <td>{s.description}</td>
-            <td className="tabular">{s.nextRunAt ? formatDateTime(s.nextRunAt) : "—"}</td>
-            <td>
-              {s.lastRun ? (
-                <span className="flex flex-col gap-1">
-                  <Badge tone={RUN_TONES[s.lastRun.state]} />
-                  <span className="text-xs text-slate-600">{runResult(s.lastRun)}</span>
-                </span>
-              ) : (
-                "Never run"
-              )}
-            </td>
-            <td>{scheduleState(s)}</td>
-            <td className="space-y-2 py-2">
-              <div className="flex flex-wrap gap-1">
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  disabled={!canAct}
-                  aria-label={`Run ${s.name} now`}
-                  onClick={() => actions.runNow(s.id)}
-                >
-                  Run now
-                </button>
-                {s.enabled ? (
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    disabled={!canAct}
-                    aria-label={`Pause ${s.name}`}
-                    onClick={() => setPausing(s.id)}
-                  >
-                    Pause…
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    disabled={!canAct}
-                    aria-label={`Resume ${s.name}`}
-                    onClick={() => actions.resume(s.id)}
-                  >
-                    Resume
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="btn-ghost text-red-700"
-                  disabled={!canAct}
-                  aria-label={`Delete ${s.name}`}
-                  onClick={() => actions.remove(s.id)}
-                >
-                  Delete
-                </button>
-              </div>
-              {pausing === s.id && (
-                <PauseForm
-                  label={`Pause ${s.name}`}
-                  maxDays={maxPauseDays}
-                  disabled={!canAct}
-                  onCancel={() => setPausing(null)}
-                  onPause={(until) => {
-                    setPausing(null);
-                    actions.pause(s.id, until);
-                  }}
-                />
-              )}
-            </td>
+    <div className="overflow-x-auto rounded-xl ring-1 ring-slate-200">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
+          <tr>
+            <th className="px-3 py-2 font-semibold">Schedule</th>
+            <th className="px-3 font-semibold">When</th>
+            <th className="px-3 font-semibold">Next run</th>
+            <th className="px-3 font-semibold">Last run</th>
+            <th className="px-3 font-semibold">State</th>
+            <th className="px-3">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {schedules.map((s) => (
+            <Fragment key={s.id}>
+              <ScheduleRow
+                schedule={s}
+                actions={actions}
+                canAct={canAct}
+                open={openId === s.id}
+                onPause={() => setPausing(s.id)}
+              />
+              {pausing === s.id && (
+                <tr>
+                  <td colSpan={6} className="px-3 pb-3">
+                    <PauseForm
+                      label={`Pause ${s.name}`}
+                      maxDays={maxPauseDays}
+                      disabled={!canAct}
+                      onCancel={() => setPausing(null)}
+                      onPause={(until) => {
+                        setPausing(null);
+                        actions.pause(s.id, until);
+                      }}
+                    />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

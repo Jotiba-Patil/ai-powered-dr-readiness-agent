@@ -1,5 +1,5 @@
 // Labels for schedules and their runs. As elsewhere, color is never the only signal.
-import type { RunState, ScheduleRun, ScheduleView } from "../api/types";
+import type { Cadence, RunState, ScheduleRun, ScheduleView } from "../api/types";
 import { formatDateTime, type Tone } from "./labels";
 
 export const RUN_TONES: Record<RunState, Tone> = {
@@ -44,6 +44,73 @@ export function emailResult(run: ScheduleRun): string {
   if (run.emailState === "sent") return `Emailed ${run.emailTo?.join(", ")}`;
   if (run.emailState === "failed") return "Email failed";
   return "No recipient";
+}
+
+/** "Every Monday at 06:00 (Asia/Calcutta)": a schedule's cadence in plain words. */
+export function cadenceSentence(cadence: Cadence, timezone: string): string {
+  if (cadence.kind === "hourly") {
+    return `Every hour at ${String(cadence.minute).padStart(2, "0")} minutes past`;
+  }
+  const at = `at ${cadence.time} (${timezone})`;
+  if (cadence.kind === "daily") return `Every day ${at}`;
+  if (cadence.kind === "weekly") {
+    const day = cadence.weekday.charAt(0).toUpperCase() + cadence.weekday.slice(1);
+    return `Every ${WEEKDAY_NAMES[day] ?? day} ${at}`;
+  }
+  if (cadence.day === "last") return `On the last day of every month ${at}`;
+  return `On day ${cadence.day} of every month ${at}`;
+}
+
+const WEEKDAY_NAMES: Record<string, string> = {
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
+};
+
+/** "in 25 min", "3 h ago", "in 2 days"; empty for an unreadable time. */
+export function relativeTime(iso: string, now: number = Date.now()): string {
+  const diff = new Date(iso).getTime() - now;
+  if (Number.isNaN(diff)) return "";
+  const total = Math.round(Math.abs(diff) / 60_000);
+  if (total < 1) return diff >= 0 ? "in under a minute" : "just now";
+  let text = `${total} min`;
+  if (total >= 48 * 60) text = `${Math.round(total / 1440)} days`;
+  else if (total >= 60) text = `${Math.round(total / 60)} h`;
+  return diff >= 0 ? `in ${text}` : `${text} ago`;
+}
+
+/** How long a finished run took, e.g. "2 min" or "45 s"; null while it runs. */
+export function runDuration(run: ScheduleRun): string | null {
+  if (!run.finishedAt) return null;
+  const seconds = Math.max(0, (Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000);
+  if (Number.isNaN(seconds)) return null;
+  return seconds < 90 ? `${Math.round(seconds)} s` : `${Math.round(seconds / 60)} min`;
+}
+
+/** A last run someone should look at: failed, high risk, RTO not feasible or email failed. */
+export function needsAttention(schedule: ScheduleView): boolean {
+  const run = schedule.lastRun;
+  if (!run) return false;
+  return (
+    run.state === "failed" ||
+    run.riskLevel === "HIGH" ||
+    run.riskLevel === "CRITICAL" ||
+    run.rtoFeasible === false ||
+    run.emailState === "failed"
+  );
+}
+
+/** Comma-separated addresses -> a list, or undefined when there are none. */
+export function recipientsOf(text: string): string[] | undefined {
+  const list = text
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return list.length ? list : undefined;
 }
 
 /** `<input type="datetime-local">` value (browser time) -> ISO string, or undefined when empty. */

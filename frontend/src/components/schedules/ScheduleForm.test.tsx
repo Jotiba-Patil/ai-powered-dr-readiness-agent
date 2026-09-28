@@ -27,6 +27,9 @@ describe("ScheduleForm", () => {
     expect(await screen.findByText("Email goes to: alice.chen@example.com")).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText("Repeat"), "weekly");
     await userEvent.selectOptions(screen.getByLabelText("Day"), "fri");
+    expect(screen.getByLabelText("Schedule preview")).toHaveTextContent(
+      "Payment weekly · Every Friday at 06:00 (UTC) · checks",
+    );
     expect(screen.getByLabelText("Timezone")).toHaveTextContent("UTC (from your browser)");
     expect(screen.queryByRole("textbox", { name: /Timezone/ })).not.toBeInTheDocument();
     await userEvent.type(

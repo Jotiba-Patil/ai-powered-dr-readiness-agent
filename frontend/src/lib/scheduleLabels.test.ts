@@ -2,9 +2,14 @@ import { describe, expect, it } from "vitest";
 import { makeRun, makeSchedule } from "../test/scheduleFixtures";
 import { browserTimezone } from "./labels";
 import {
+  cadenceSentence,
   emailResult,
   localInputToIso,
+  needsAttention,
   parseScheduleHash,
+  recipientsOf,
+  relativeTime,
+  runDuration,
   runResult,
   scheduleState,
 } from "./scheduleLabels";
@@ -46,5 +51,45 @@ describe("scheduleLabels", () => {
     expect(localInputToIso("not a date")).toBeUndefined();
     expect(localInputToIso("2026-09-30T08:00")).toBe(new Date("2026-09-30T08:00").toISOString());
     expect(browserTimezone()).toBe("UTC"); // pinned in vite.config.ts
+  });
+
+  it("describes a cadence in plain words", () => {
+    expect(cadenceSentence({ kind: "hourly", minute: 5 }, "UTC")).toBe(
+      "Every hour at 05 minutes past",
+    );
+    expect(cadenceSentence({ kind: "daily", time: "06:00" }, "UTC")).toBe(
+      "Every day at 06:00 (UTC)",
+    );
+    expect(
+      cadenceSentence({ kind: "weekly", weekday: "mon", time: "07:30" }, "Asia/Calcutta"),
+    ).toBe("Every Monday at 07:30 (Asia/Calcutta)");
+    expect(cadenceSentence({ kind: "monthly", day: 15, time: "01:00" }, "UTC")).toBe(
+      "On day 15 of every month at 01:00 (UTC)",
+    );
+    expect(cadenceSentence({ kind: "monthly", day: "last", time: "01:00" }, "UTC")).toBe(
+      "On the last day of every month at 01:00 (UTC)",
+    );
+  });
+
+  it("gives relative times and run durations", () => {
+    const now = Date.parse("2026-09-28T06:00:00Z");
+    expect(relativeTime("2026-09-28T06:25:00Z", now)).toBe("in 25 min");
+    expect(relativeTime("2026-09-28T03:00:00Z", now)).toBe("3 h ago");
+    expect(relativeTime("2026-09-30T06:00:00Z", now)).toBe("in 2 days");
+    expect(relativeTime("2026-09-28T06:00:10Z", now)).toBe("in under a minute");
+    expect(relativeTime("2026-09-28T05:59:50Z", now)).toBe("just now");
+    expect(relativeTime("nope", now)).toBe("");
+    expect(runDuration(makeRun())).toBe("2 min");
+    expect(runDuration(makeRun({ finishedAt: "2026-09-27T06:00:45Z" }))).toBe("45 s");
+    expect(runDuration(makeRun({ finishedAt: null }))).toBeNull();
+  });
+
+  it("flags last runs that need attention and splits recipients", () => {
+    expect(needsAttention(makeSchedule())).toBe(true);
+    expect(needsAttention(makeSchedule({ lastRun: null }))).toBe(false);
+    const fine = makeRun({ riskLevel: "LOW", riskScore: 10, rtoFeasible: true });
+    expect(needsAttention(makeSchedule({ lastRun: fine }))).toBe(false);
+    expect(recipientsOf(" a@x.com, ,b@x.com ")).toEqual(["a@x.com", "b@x.com"]);
+    expect(recipientsOf(" ")).toBeUndefined();
   });
 });

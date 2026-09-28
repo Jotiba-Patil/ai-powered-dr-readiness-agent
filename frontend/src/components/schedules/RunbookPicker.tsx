@@ -1,7 +1,8 @@
 import { useId, useState } from "react";
 import type { Api } from "../../api/client";
+import { FIELD } from "./fieldStyles";
 
-const INPUT = "w-full rounded-md border border-slate-300 px-2 py-1";
+const INPUT = `w-full ${FIELD}`;
 
 /**
  * Pick a runbook from the server's folder, or upload one: the server checks that it parses,
@@ -41,7 +42,7 @@ export function RunbookPicker({
   const options = value && !runbooks.includes(value) ? [...runbooks, value] : runbooks;
   return (
     <div className="text-sm">
-      <label htmlFor={selectId} className="block text-slate-700">
+      <label htmlFor={selectId} className="block font-medium text-slate-700">
         Runbook
       </label>
       <select

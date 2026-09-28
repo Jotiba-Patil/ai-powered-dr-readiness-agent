@@ -4,11 +4,14 @@ import { useSchedules } from "../../hooks/useSchedules";
 import { useStoredName } from "../../hooks/useStoredName";
 import { clearScheduleHash, type ScheduleLink } from "../../lib/scheduleLabels";
 import { Section } from "../Section";
+import { ActionNotice } from "./ActionNotice";
 import { ScheduleForm } from "./ScheduleForm";
 import { ScheduleList, type ScheduleActions } from "./ScheduleList";
 import { ScheduleRuns } from "./ScheduleRuns";
 import { ScheduledRunDetail } from "./ScheduledRunDetail";
 import { SchedulerBar } from "./SchedulerBar";
+import { ScheduleStats } from "./ScheduleStats";
+import { SchedulesOverview } from "./SchedulesOverview";
 import { YourName } from "./YourName";
 
 interface OpenRun {
@@ -79,7 +82,7 @@ export function SchedulesView({
 
   const byId = (id: string) => data.schedules.find((s) => s.id === id);
   const actions: ScheduleActions = {
-    open: setOpenSchedule,
+    open: (id) => setOpenSchedule((current) => (current === id ? null : id)),
     runNow: (id) => {
       void data.act("Starting a run…", () => api.runScheduleNow(id));
       setOpenSchedule(id);
@@ -95,34 +98,27 @@ export function SchedulesView({
   };
   const shown = openSchedule ? byId(openSchedule) : undefined;
 
+  const paused = data.scheduler.paused;
   return (
     <div className="space-y-5">
-      <Section
-        title="Schedules"
-        actions={
-          <button type="button" className="btn-ghost" onClick={() => void data.refresh()}>
-            Refresh
-          </button>
-        }
-      >
-        <div className="space-y-3">
-          <YourName name={name} onName={setName} />
-          <SchedulerBar
-            scheduler={data.scheduler}
-            canAct={canAct}
-            onPauseAll={(until) => void data.act("Pausing all…", () => api.pauseAll(by, until))}
-            onResumeAll={() => void data.act("Resuming all…", () => api.resumeAll(by))}
-          />
-          {data.pending && <p role="status">{data.pending}</p>}
-          {data.actionError && <p role="alert">{data.actionError}</p>}
-          <ScheduleList
-            schedules={data.schedules}
-            actions={actions}
-            canAct={canAct}
-            maxPauseDays={data.scheduler.maxPauseDays}
-          />
-        </div>
-      </Section>
+      <SchedulesOverview paused={paused} onRefresh={() => void data.refresh()}>
+        <ScheduleStats scheduler={data.scheduler} schedules={data.schedules} />
+        <YourName name={name} onName={setName} />
+        <SchedulerBar
+          scheduler={data.scheduler}
+          canAct={canAct}
+          onPauseAll={(until) => void data.act("Pausing all…", () => api.pauseAll(by, until))}
+          onResumeAll={() => void data.act("Resuming all…", () => api.resumeAll(by))}
+        />
+        <ActionNotice pending={data.pending} error={data.actionError} />
+        <ScheduleList
+          schedules={data.schedules}
+          actions={actions}
+          canAct={canAct}
+          maxPauseDays={data.scheduler.maxPauseDays}
+          openId={shown?.id ?? null}
+        />
+      </SchedulesOverview>
       {shown && (
         <ScheduleRuns
           key={shown.id}
